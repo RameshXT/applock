@@ -6,6 +6,23 @@ import { listen } from "@tauri-apps/api/event";
 import styles from "./App.module.css";
 import clsx from "clsx";
 
+const GithubIcon = ({ size = 18 }: { size?: number }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.28 1.15-.28 2.35 0 3.5-.73 1.02-1.08 2.25-1 3.5 0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4" />
+    <path d="M9 18c-4.51 2-5-2-7-2" />
+  </svg>
+);
+
 type View = "onboarding" | "setup" | "unlock" | "dashboard" | "gatekeeper";
 type AuthMode = "Password" | "PIN";
 type Tab = "all" | "system" | "settings";
@@ -29,8 +46,8 @@ const ModernSelect = ({ value, options, onChange }: { value: string, options: { 
 
   return (
     <div className={styles.selectWrapper}>
-      <button 
-        className={styles.modernSelectBtn} 
+      <button
+        className={styles.modernSelectBtn}
         onFocus={() => setIsOpen(true)}
         onBlur={() => setTimeout(() => setIsOpen(false), 200)}
       >
@@ -42,15 +59,15 @@ const ModernSelect = ({ value, options, onChange }: { value: string, options: { 
 
       <AnimatePresence>
         {isOpen && (
-          <motion.div 
-            initial={{ opacity: 0, y: 5 }} 
-            animate={{ opacity: 1, y: 0 }} 
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 5 }}
             className={styles.selectMenu}
           >
             {options.map(opt => (
-              <div 
-                key={opt.value} 
+              <div
+                key={opt.value}
                 className={clsx(styles.selectOption, opt.value === value && styles.selectOptionActive)}
                 onClick={() => { onChange(opt.value); setIsOpen(false); }}
               >
@@ -297,12 +314,12 @@ function App() {
     <div className={clsx(styles.container, view === 'gatekeeper' && styles.transparentBg)}>
       <AnimatePresence mode="wait">
         {view === "onboarding" && (
-          <motion.div 
-            key="onboarding" 
-            initial={{ opacity: 0, y: 8 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.4 }} 
-            className={styles.unlockScreen} 
+          <motion.div
+            key="onboarding"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className={styles.unlockScreen}
             style={{ maxWidth: '500px' }}
           >
             <div className={styles.unlockIcon}><Shield size={80} strokeWidth={1} /></div>
@@ -330,11 +347,11 @@ function App() {
         )}
 
         {view === "setup" && (
-          <motion.div 
-            key="setup" 
-            initial={{ opacity: 0, y: 8 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.4 }} 
+          <motion.div
+            key="setup"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
             className={styles.unlockScreen}
           >
             <div className={styles.unlockTitle}>Security Initialization</div>
@@ -386,11 +403,11 @@ function App() {
         )}
 
         {view === "unlock" && (
-          <motion.div 
-            key="unlock" 
-            initial={{ opacity: 0, y: 8 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.4 }} 
+          <motion.div
+            key="unlock"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
             className={styles.unlockScreen}
           >
             <div className={styles.unlockIcon}><Shield size={64} strokeWidth={1.5} /></div>
@@ -443,6 +460,27 @@ function App() {
                 <h1 className={styles.mainTitle}>Vault</h1>
               </div>
 
+              <div className={styles.tabs}>
+                <button
+                  className={clsx(styles.tab, activeTab === "all" && styles.tabActive)}
+                  onClick={() => setActiveTab("all")}
+                >
+                  <Lock size={16} /> Locked Apps
+                </button>
+                <button
+                  className={clsx(styles.tab, activeTab === "system" && styles.tabActive)}
+                  onClick={() => setActiveTab("system")}
+                >
+                  <Unlock size={16} /> Unlocked Apps
+                </button>
+                <button
+                  className={clsx(styles.tab, activeTab === "settings" && styles.tabActive)}
+                  onClick={() => setActiveTab("settings")}
+                >
+                  <Settings size={16} /> Settings
+                </button>
+              </div>
+
               <div className={styles.headerActions}>
                 {activeTab !== "settings" && (
                   <div className={styles.searchBar}>
@@ -461,26 +499,6 @@ function App() {
               </div>
             </header>
 
-            <div className={styles.tabs}>
-              <button
-                className={clsx(styles.tab, activeTab === "all" && styles.tabActive)}
-                onClick={() => setActiveTab("all")}
-              >
-                <Lock size={16} /> Locked Apps
-              </button>
-              <button
-                className={clsx(styles.tab, activeTab === "system" && styles.tabActive)}
-                onClick={() => setActiveTab("system")}
-              >
-                <Unlock size={16} /> Unlocked Apps
-              </button>
-              <button
-                className={clsx(styles.tab, activeTab === "settings" && styles.tabActive)}
-                onClick={() => setActiveTab("settings")}
-              >
-                <Settings size={16} /> Settings
-              </button>
-            </div>
 
             <main className={styles.mainScrollArea}>
               {activeTab === "settings" ? (
@@ -495,9 +513,12 @@ function App() {
                     <button className={clsx(styles.settingsNavBtn, settingsTab === "system" && styles.settingsNavBtnActive)} onClick={() => setSettingsTab("system")}>
                       <Monitor size={18} /> System & Style
                     </button>
+                    <button className={clsx(styles.settingsNavBtn, settingsTab === "contribution" && styles.settingsNavBtnActive)} onClick={() => setSettingsTab("contribution")}>
+                      <GithubIcon size={18} /> Contribution
+                    </button>
                     <div style={{ flex: 1 }} />
-                    <button 
-                      className={styles.dangerBtnMinimal} 
+                    <button
+                      className={styles.dangerBtnMinimal}
                       onClick={() => setShowResetConfirm(true)}
                     >
                       <RotateCcw size={18} />
@@ -551,8 +572,8 @@ function App() {
                             <span>Number of failures before lockout triggers.</span>
                           </div>
                           <div className={styles.settingControl}>
-                            <ModernSelect 
-                              value={lockoutLimit} 
+                            <ModernSelect
+                              value={lockoutLimit}
                               onChange={setLockoutLimit}
                               options={[
                                 { label: "3 Attempts", value: "3" },
@@ -569,8 +590,8 @@ function App() {
                             <span>Cooldown period when limit is reached.</span>
                           </div>
                           <div className={styles.settingControl}>
-                            <ModernSelect 
-                              value={lockoutDuration} 
+                            <ModernSelect
+                              value={lockoutDuration}
                               onChange={setLockoutDuration}
                               options={[
                                 { label: "30 Seconds", value: "30" },
@@ -631,13 +652,41 @@ function App() {
                       </section>
                     )}
 
+                    {settingsTab === "contribution" && (
+                      <section className={styles.settingsGroup}>
+                        <div className={styles.settingsHeader}>
+                          <h2>Contribution</h2>
+                          <p>Guardian is open source. Help us shape the future of privacy.</p>
+                        </div>
+
+                        <div className={styles.settingRow}>
+                          <div className={styles.settingLabel}>
+                            <span>Open Source</span>
+                            <span>Explore the source code, report bugs, or submit features.</span>
+                          </div>
+                          <div className={styles.settingControl}>
+                            <a
+                              href="https://github.com/RameshXT/applock"
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={styles.iconBtn}
+                              style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '8px' }}
+                            >
+                              <GithubIcon size={16} />
+                              Repository
+                            </a>
+                          </div>
+                        </div>
+                      </section>
+                    )}
+
                     <footer className={styles.settingsFooter}>
                       <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
                         <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--accent-color)', letterSpacing: '0.1em' }}>APPLOCK</span>
                         <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
                         <span style={{ fontSize: '0.7rem', fontWeight: 500, color: '#fff', opacity: 0.3 }}>V1.0.4</span>
                       </div>
-                      
+
                       <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
                         <ShieldCheck size={12} color="var(--accent-color)" style={{ opacity: 0.5 }} />
                         <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', color: '#fff', opacity: 0.3 }}>VERIFIED</span>
@@ -645,9 +694,9 @@ function App() {
 
                       <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem' }}>
                         <span style={{ opacity: 0.4 }}>Designed & Developed by</span>
-                        <a 
-                          href="https://rameshxt.pages.dev/" 
-                          target="_blank" 
+                        <a
+                          href="https://rameshxt.pages.dev/"
+                          target="_blank"
                           rel="noopener noreferrer"
                           style={{ color: '#EF233C', fontWeight: 700, textDecoration: 'none' }}
                         >
@@ -665,22 +714,34 @@ function App() {
                   transition={{ duration: 0.4 }}
                   className={styles.appList}
                 >
-                  {isScanning ? <div className={styles.emptyState}>Scanning Workspace...</div> :
+                  {isScanning ? (
+                    <div className={styles.emptyState}>
+                      <div className={styles.premiumLoader}>
+                        <motion.div 
+                          className={styles.loaderRing}
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                        />
+                        <Shield size={20} className={styles.loaderIcon} />
+                      </div>
+                      <span className={styles.loaderText}>Scanning Workspace</span>
+                    </div>
+                  ) : (
                     (activeTab === "all" ? lockedApps : allApps)
                       .filter(app => app.name.toLowerCase().includes(search.toLowerCase()))
-                        .map(app => {
-                          const isLocked = lockedApps.some(la => la.name === app.name);
-                          return (
-                            <motion.div
-                              layout
-                              key={app.name}
-                              initial={{ opacity: 0 }}
-                              animate={{ opacity: 1 }}
-                              transition={{ duration: 0.4 }}
-                              whileHover={{ y: -2 }}
-                              className={clsx(styles.appCard, isLocked && styles.appCardLocked)}
-                              onClick={() => toggleApp(app)}
-                            >
+                      .map(app => {
+                        const isLocked = lockedApps.some(la => la.name === app.name);
+                        return (
+                          <motion.div
+                            layout
+                            key={app.name}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ duration: 0.4 }}
+                            whileHover={{ y: -2 }}
+                            className={clsx(styles.appCard, isLocked && styles.appCardLocked)}
+                            onClick={() => toggleApp(app)}
+                          >
                             {isLocked && <div className={styles.lockedBadge}><Lock size={8} /> LOCKED</div>}
                             <div className={styles.appIconContainer}>
                               {app.icon ? <img src={app.icon} className={styles.appIconImg} alt="" /> : <Shield size={24} color={isLocked ? "var(--accent-color)" : "var(--text-secondary)"} style={{ opacity: isLocked ? 1 : 0.3 }} />}
@@ -694,7 +755,7 @@ function App() {
                             </div>
                           </motion.div>
                         );
-                      })}
+                      }))}
                 </motion.div>
               )}
             </main>
@@ -702,11 +763,11 @@ function App() {
         )}
 
         {view === "gatekeeper" && (
-          <motion.div 
-            key="gatekeeper" 
-            initial={{ opacity: 0, y: 8 }} 
-            animate={{ opacity: 1, y: 0 }} 
-            transition={{ duration: 0.4 }} 
+          <motion.div
+            key="gatekeeper"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
             className={clsx(styles.gatekeeperCard, styles.solidBg)}
           >
             <div className={styles.gatekeeperBrand}>
@@ -774,9 +835,9 @@ function App() {
               <p>Are you sure you want to reset Guardian? This will remove all your protected apps and security settings.</p>
               <div className={styles.modalActions}>
                 <button className={styles.modalCancel} onClick={() => setShowResetConfirm(false)}>Cancel</button>
-                <button 
-                  className={styles.modalConfirm} 
-                  style={{ background: '#f59e0b' }} 
+                <button
+                  className={styles.modalConfirm}
+                  style={{ background: '#f59e0b' }}
                   onClick={() => {
                     setShowResetConfirm(false);
                     setShowResetFinal(true);
@@ -797,8 +858,8 @@ function App() {
               <p>This action is <strong>irreversible</strong>. All your configurations will be permanently deleted and cannot be recovered.</p>
               <div className={styles.modalActions}>
                 <button className={styles.modalCancel} onClick={() => setShowResetFinal(false)}>Abort</button>
-                <button 
-                  className={styles.modalConfirm} 
+                <button
+                  className={styles.modalConfirm}
                   onClick={async () => {
                     await invoke("reset_app");
                     window.location.reload();
