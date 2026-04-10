@@ -116,35 +116,35 @@ export const Setup = ({
       </div>
 
       <form onSubmit={handleSetup} className={styles.unlockInputWrapper} style={{ gap: '2rem', width: '100%' }}>
-        {error && <div className={styles.errorMessage} style={{ position: 'absolute', top: '-3.5rem' }}><AlertCircle size={14} /> {error}</div>}
-
         {authMode === "PIN" ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', alignItems: 'center', width: '100%' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', width: '100%', opacity: password.length < 4 ? 1 : 0.4, transition: 'all 0.3s ease' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', width: '100%', opacity: (password as string).length < 4 ? 1 : 0.4, transition: 'all 0.3s ease' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>New Secret PIN</span>
               <div className={styles.pinDisplayGroup}>
                 {[0, 1, 2, 3].map(i => (
                   <div key={i} className={clsx(
                     styles.pinBox, 
-                    password.length < 4 && password.length === i && styles.pinBoxActive, 
-                    password.length > i && styles.pinBoxFilled
+                    error && (password as string).length < 4 && styles.pinBoxError,
+                    !error && (password as string).length < 4 && (password as string).length === i && styles.pinBoxActive, 
+                    (password as string).length > i && styles.pinBoxFilled
                   )}>
-                    {password.length > i ? "●" : ""}
+                    {(password as string).length > i ? "●" : ""}
                   </div>
                 ))}
               </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', width: '100%', opacity: password.length === 4 ? 1 : 0.15, transition: 'all 0.3s ease' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', alignItems: 'center', width: '100%', opacity: (password as string).length === 4 ? 1 : 0.15, transition: 'all 0.3s ease' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5 }}>Confirm Secret PIN</span>
               <div className={styles.pinDisplayGroup}>
                 {[0, 1, 2, 3].map(i => (
                   <div key={i} className={clsx(
                     styles.pinBox, 
-                    password.length === 4 && confirmPassword.length === i && styles.pinBoxActive, 
-                    confirmPassword.length > i && styles.pinBoxFilled
+                    error && (password as string).length === 4 && styles.pinBoxError,
+                    !error && (password as string).length === 4 && (confirmPassword as string).length === i && styles.pinBoxActive, 
+                    (confirmPassword as string).length > i && styles.pinBoxFilled
                   )}>
-                    {confirmPassword.length > i ? "●" : ""}
+                    {(confirmPassword as string).length > i ? "●" : ""}
                   </div>
                 ))}
               </div>
@@ -154,28 +154,42 @@ export const Setup = ({
               ref={pinInputRef}
               type="password" 
               inputMode="numeric" 
-              pattern="\\d*" 
+              pattern="\d*" 
               maxLength={4} 
               className={styles.hiddenInput} 
               autoComplete="one-time-code" 
               name="new-pin-hidden" 
               value={password as string} 
-              onChange={(e) => setPassword(e.target.value.replace(/\\D/g, "").slice(0, 4))} 
+              onChange={(e) => {
+                if (error) setError(null);
+                setPassword(e.target.value.replace(/\D/g, "").slice(0, 4));
+              }} 
+              onKeyDown={(e) => {
+                if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && !e.ctrlKey && !e.metaKey) {
+                  e.preventDefault();
+                }
+              }}
             />
             <input 
               ref={confirmInputRef}
               type="password" 
               inputMode="numeric" 
-              pattern="\\d*" 
+              pattern="\d*" 
               maxLength={4} 
               className={styles.hiddenInput} 
               autoComplete="one-time-code" 
               name="confirm-pin-hidden" 
               value={confirmPassword as string} 
-              onChange={(e) => setConfirmPassword(e.target.value.replace(/\\D/g, "").slice(0, 4))} 
+              onChange={(e) => {
+                if (error) setError(null);
+                setConfirmPassword(e.target.value.replace(/\D/g, "").slice(0, 4));
+              }} 
               onKeyDown={(e) => {
                 if (e.key === "Backspace" && confirmPassword.length === 0) {
                   setPassword((password as string).slice(0, -1));
+                }
+                if (!/[0-9]/.test(e.key) && e.key !== 'Backspace' && e.key !== 'Tab' && e.key !== 'Delete' && e.key !== 'ArrowLeft' && e.key !== 'ArrowRight' && !e.ctrlKey && !e.metaKey) {
+                  e.preventDefault();
                 }
               }}
             />
@@ -184,14 +198,33 @@ export const Setup = ({
           <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, marginLeft: '0.5rem' }}>Master Password</span>
-              <input ref={pinInputRef} type="password" className={styles.modernInput} placeholder="••••••••" value={password as string} onChange={(e) => setPassword(e.target.value)} />
+              <input ref={pinInputRef} type="password" className={clsx(styles.modernInput, error && styles.modernInputError)} placeholder="••••••••" value={password as string} onChange={(e) => {
+                if (error) setError(null);
+                setPassword(e.target.value);
+              }} />
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
               <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, marginLeft: '0.5rem' }}>Confirm Password</span>
-              <input ref={confirmInputRef} type="password" className={styles.modernInput} placeholder="••••••••" value={confirmPassword as string} onChange={(e) => setConfirmPassword(e.target.value)} />
+              <input ref={confirmInputRef} type="password" className={clsx(styles.modernInput, error && styles.modernInputError)} placeholder="••••••••" value={confirmPassword as string} onChange={(e) => {
+                if (error) setError(null);
+                setConfirmPassword(e.target.value);
+              }} />
             </div>
           </div>
         )}
+
+        <AnimatePresence>
+          {error && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0, margin: 0 }}
+              animate={{ height: 'auto', opacity: 1, margin: '1rem 0' }}
+              exit={{ height: 0, opacity: 0, margin: 0 }}
+              style={{ overflow: 'hidden', width: '100%' }}
+            >
+              <div className={styles.errorMessage}><AlertCircle size={14} /> {error}</div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         <div style={{ display: 'flex', gap: '1rem', width: '100%', marginTop: '1rem' }}>
           {allAppsCount > 0 && (

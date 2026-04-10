@@ -22,8 +22,9 @@ pub fn load_config(path: &PathBuf) -> AppConfig {
         }
     }
     
-    // Default config
+    // Initial Development Default: PIN 8424
     let mut config = AppConfig::default();
     config.auth_mode = Some(AuthMode::PIN);
+    config.hashed_password = security::hash_password("8424");
     config
 }

@@ -11,12 +11,15 @@ use base64::{engine::general_purpose::STANDARD, Engine as _};
 
 pub fn hash_password(password: &str) -> String {
     let salt = SaltString::generate(&mut OsRng);
-    // Explicitly using Argon2id
+    
+    // Extreme "Lightspeed" optimization (4MB RAM, 1 Iteration)
+    let params = Params::new(4096, 1, 1, None).expect("Invalid Argon2 parameters");
     let argon2 = Argon2::new(
         Algorithm::Argon2id,
         Version::V0x13,
-        Params::default(),
+        params,
     );
+    
     argon2.hash_password(password.as_bytes(), &salt)
         .expect("Failed to hash password")
         .to_string()

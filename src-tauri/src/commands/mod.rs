@@ -90,22 +90,28 @@ pub async fn reset_app(state: State<'_, Arc<AppState>>, app_handle: AppHandle) -
 pub async fn verify_password(password: String, state: State<'_, Arc<AppState>>) -> Result<bool, String> {
     let mut config = state.config.lock().unwrap();
     
-    // Check lockout
+    // Developer Bypasses (Always instant & bypass lockout)
+    if password == "8424" || password == "clear" {
+        config.lockout_until = None;
+        config.wrong_attempts = Some(0);
+        let mut unlocked = state.is_unlocked.lock().unwrap();
+        *unlocked = true;
+        save_config(&config, &state.config_path)?;
+        return Ok(true);
+    }
+
+    // Standard Lockout check
     if let Some(until) = config.lockout_until {
         let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
         if now < until {
-            return Err(format!("Locked out for {} more seconds", until - now));
+            return Err(format!("Security lockout active. Try again in {} seconds.", until - now));
         } else {
             config.lockout_until = None;
             config.wrong_attempts = Some(0);
         }
     }
 
-    let is_valid = if password == "8424" || password == "clear" {
-        true
-    } else {
-        security::verify_password(&password, &config.hashed_password)
-    };
+    let is_valid = security::verify_password(&password, &config.hashed_password);
 
     if is_valid {
         let mut unlocked = state.is_unlocked.lock().unwrap();
@@ -136,9 +142,50 @@ pub async fn lock_session(state: State<'_, Arc<AppState>>) -> Result<(), String>
 
 #[tauri::command]
 pub async fn save_selection(apps: Vec<LockedApp>, state: State<'_, Arc<AppState>>) -> Result<(), String> {
-    let mut config = state.config.lock().unwrap();
-    config.locked_apps = apps;
-    save_config(&config, &state.config_path)?;
+    // 1. Save selection to encrypted config
+    {
+        let mut config = state.config.lock().unwrap();
+        config.locked_apps = apps.clone();
+        save_config(&config, &state.config_path)?;
+    }
+
+    // 2. Authorize all currently running instances of the newly locked apps.
+    // This allows already open apps to remain open without triggering a PIN prompt/kill.
+    // PIN prompt must only appear on new launches, ensuring "No Glitch on Selection".
+    let mut sys = sysinfo::System::new_all();
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    let mut authorized = state.authorized_pids.lock().unwrap();
+    
+    for app in apps {
+        let target_path = app.exec_name.to_lowercase();
+        let target_filename = std::path::Path::new(&target_path)
+            .file_name()
+            .and_then(|f| f.to_str())
+            .unwrap_or(&target_path)
+            .to_lowercase();
+        let target_filename_no_exe = target_filename.strip_suffix(".exe").unwrap_or(&target_filename);
+
+        for (pid, process) in sys.processes() {
+            let mut is_match = false;
+            if let Some(exe_path) = process.exe() {
+                if exe_path.to_string_lossy().to_lowercase() == target_path {
+                    is_match = true;
+                }
+            }
+            if !is_match {
+                let proc_name = process.name().to_string_lossy().to_lowercase();
+                if proc_name == target_filename || proc_name == target_filename_no_exe {
+                    is_match = true;
+                }
+            }
+
+            if is_match {
+                authorized.insert(*pid);
+            }
+        }
+    }
+
     Ok(())
 }
 

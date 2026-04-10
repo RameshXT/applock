@@ -20,7 +20,7 @@ const APP_NAME = "Windows AppLock";
 
 function App() {
   const [view, setView] = useState<View | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [activeTab, setActiveTab] = useState<Tab>(() => (localStorage.getItem("applock_tab") as Tab) || "home");
   const [authMode, setAuthMode] = useState<AuthMode>("PIN");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -32,20 +32,27 @@ function App() {
   const [blockedApp, setBlockedApp] = useState<LockedApp | null>(null);
   const [gatekeeperPIN, setGatekeeperPIN] = useState("");
   const [isLaunching, setIsLaunching] = useState(false);
-  const [appToRemove, setAppToRemove] = useState<LockedApp | InstalledApp | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showResetFinal, setShowResetFinal] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
   const [completingStep, setCompletingStep] = useState(0);
   const [isUpdatingFromSettings, setIsUpdatingFromSettings] = useState(false);
   const [showUpdateSuccess, setShowUpdateSuccess] = useState(false);
+  const [toast, setToast] = useState<{ message: string; visible: boolean; type: 'lock' | 'unlock' | 'success' }>({ message: "", visible: false, type: 'success' });
+  const [appToRemove, setAppToRemove] = useState<LockedApp | InstalledApp | null>(null);
+  const [appsToBulkUnlock, setAppsToBulkUnlock] = useState<LockedApp[] | null>(null);
+
+  const triggerToast = (message: string, type: 'lock' | 'unlock' | 'success' = 'success') => {
+    setToast({ message, visible: true, type });
+    setTimeout(() => setToast({ message: "", visible: false, type: 'success' }), 3000);
+  };
   
   const pinInputRef = useRef<HTMLInputElement>(null);
   const confirmInputRef = useRef<HTMLInputElement>(null);
   const mainInputRef = useRef<HTMLInputElement>(null);
   const gatekeeperInputRef = useRef<HTMLInputElement>(null);
 
-  const [settingsTab, setSettingsTab] = useState("account");
+  const [settingsTab, setSettingsTab] = useState(() => localStorage.getItem("applock_settings_tab") || "account");
   const [config, setConfig] = useState<AppConfig>({
     locked_apps: [],
     auth_mode: "PIN",
@@ -82,7 +89,19 @@ function App() {
         } else {
           const isUnlocked = await invoke<boolean>("get_is_unlocked");
           if (isUnlocked) {
-            setView("dashboard");
+            // Restore session state
+            const persistedView = localStorage.getItem("applock_view") as View;
+            const persistedTab = localStorage.getItem("applock_tab") as Tab;
+            const persistedSettingsTab = localStorage.getItem("applock_settings_tab");
+
+            if (persistedView && ["dashboard", "setup", "verify"].includes(persistedView)) {
+              setView(persistedView);
+            } else {
+              setView("dashboard");
+            }
+            
+            if (persistedTab) setActiveTab(persistedTab);
+            if (persistedSettingsTab) setSettingsTab(persistedSettingsTab);
           } else {
             setView("unlock");
           }
@@ -152,25 +171,32 @@ function App() {
     } catch (err) { setError(String(err)); }
   };
 
-  const handleUnlock = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleUnlock = async (e: React.FormEvent, passwordOverride?: string) => {
+    if (e) e.preventDefault();
+    const passwordToVerify = passwordOverride || password;
     try {
-      const isValid = await invoke<boolean>("verify_password", { password });
+      const isValid = await invoke<boolean>("verify_password", { password: passwordToVerify });
       if (isValid) {
-        setView("dashboard");
+        if (view === "verify") {
+          setView("setup");
+        } else {
+          setView("dashboard");
+        }
         setError(null);
         setPassword("");
       } else {
-        setError("Invalid credentials");
+        setError("Invalid security credentials");
+        setPassword("");
       }
     } catch (err) { setError(String(err)); }
   };
 
-  const handleGatekeeperUnlock = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGatekeeperUnlock = async (e: React.FormEvent, pinOverride?: string) => {
+    if (e) e.preventDefault();
+    const pinToVerify = pinOverride || gatekeeperPIN;
     if (!blockedApp) return;
     try {
-      const isValid = await invoke<boolean>("verify_password", { password: gatekeeperPIN });
+      const isValid = await invoke<boolean>("verify_password", { password: pinToVerify });
       if (isValid) {
         setIsLaunching(true);
         await invoke("release_app", { appPath: blockedApp.exec_name });
@@ -182,18 +208,31 @@ function App() {
           getCurrentWindow().close();
         }, 1000);
       } else {
+        setError("Invalid security credentials");
         setGatekeeperPIN("");
-        setError("Invalid credentials");
       }
     } catch (err) { setError(String(err)); }
   };
 
-  const toggleApp = async (app: LockedApp | InstalledApp) => {
+  const toggleApp = async (app: LockedApp | InstalledApp, fromTab?: Tab) => {
     const isLocked = lockedApps.some(la => la.name === app.name);
     if (isLocked) {
-      setAppToRemove(app);
+      if (fromTab === "all") {
+        setAppToRemove(app);
+        return;
+      }
+
+      // Release app immediately for Unlocked section
+      const newLocked = lockedApps.filter(la => la.name !== app.name);
+      setLockedApps(newLocked);
+      try {
+        await invoke("save_selection", { apps: newLocked });
+        triggerToast(`${app.name} Unlocked Successfully`, 'unlock');
+      } catch (err) { setError(String(err)); }
       return;
     }
+
+    // Lock app immediately
     const newLocked: LockedApp[] = [...lockedApps, {
       id: Math.random().toString(36).substring(2, 9),
       name: app.name,
@@ -201,15 +240,39 @@ function App() {
       icon: app.icon
     }];
     setLockedApps(newLocked);
-    try { await invoke("save_selection", { apps: newLocked }); } catch (err) { setError(String(err)); }
+    try { 
+      await invoke("save_selection", { apps: newLocked }); 
+      triggerToast(`${app.name} Locked Successfully`, 'lock');
+    } catch (err) { setError(String(err)); }
   };
 
   const confirmRemoval = async () => {
     if (!appToRemove) return;
     const newLocked = lockedApps.filter(la => la.name !== appToRemove.name);
     setLockedApps(newLocked);
+    const removedAppName = appToRemove.name;
     setAppToRemove(null);
-    try { await invoke("save_selection", { apps: newLocked }); } catch (err) { setError(String(err)); }
+    try { 
+      await invoke("save_selection", { apps: newLocked }); 
+      triggerToast(`${removedAppName} Unlocked Successfully`, 'unlock');
+    } catch (err) { setError(String(err)); }
+  };
+
+  const bulkUnlock = (apps: LockedApp[]) => {
+    setAppsToBulkUnlock(apps);
+  };
+
+  const confirmBulkUnlock = async () => {
+    if (!appsToBulkUnlock) return;
+    const namesToUnlock = new Set(appsToBulkUnlock.map(a => a.name));
+    const newLocked = lockedApps.filter(la => !namesToUnlock.has(la.name));
+    const count = appsToBulkUnlock.length;
+    setLockedApps(newLocked);
+    setAppsToBulkUnlock(null);
+    try {
+      await invoke("save_selection", { apps: newLocked });
+      triggerToast(`${count} Apps Unlocked Successfully`, 'unlock');
+    } catch (err) { setError(String(err)); }
   };
 
   const handleLockSession = async () => {
@@ -251,10 +314,19 @@ function App() {
     return () => clearTimeout(timeout);
   }, [charIndex, isDeleting, appIndex]);
 
+  // Persist state changes
+  useEffect(() => {
+    if (view && view !== "onboarding" && view !== "unlock" && view !== "gatekeeper") {
+      localStorage.setItem("applock_view", view);
+    }
+    if (activeTab) localStorage.setItem("applock_tab", activeTab);
+    if (settingsTab) localStorage.setItem("applock_settings_tab", settingsTab);
+  }, [view, activeTab, settingsTab]);
+
   useEffect(() => {
     const handleFocus = () => {
       let target: HTMLInputElement | null = null;
-      if (view === "unlock") target = mainInputRef.current;
+      if (view === "unlock" || view === "verify") target = mainInputRef.current;
       else if (view === "gatekeeper") target = gatekeeperInputRef.current;
       else if (view === "setup") {
         if (authMode === "PIN") target = password.length < 4 ? pinInputRef.current : confirmInputRef.current;
@@ -288,19 +360,31 @@ function App() {
             handleSetup={handleSetup} setView={setView}
           />
         )}
-        {view === "unlock" && (
+        {(view === "unlock" || view === "verify") && (
           <Unlock 
             appName={APP_NAME} authMode={authMode} password={password} error={error}
-            mainInputRef={mainInputRef} setPassword={setPassword} handleUnlock={handleUnlock}
+            isVerify={view === "verify"}
+            mainInputRef={mainInputRef} setPassword={setPassword} setError={setError} handleUnlock={handleUnlock}
+            onCancel={() => { setView("dashboard"); setPassword(""); setError(null); }}
           />
         )}
         {view === "dashboard" && (
           <Dashboard 
             appName={APP_NAME} activeTab={activeTab} setActiveTab={setActiveTab} showUpdateSuccess={showUpdateSuccess}
+            toast={toast}
             search={search} setSearch={setSearch} placeholder={placeholder} handleLockSession={handleLockSession}
             isScanning={isScanning} allApps={allApps} lockedApps={lockedApps} toggleApp={toggleApp}
+            bulkUnlock={bulkUnlock}
             settingsTab={settingsTab} setSettingsTab={setSettingsTab} authMode={authMode} setAuthMode={setAuthMode}
-            setView={setView} setIsUpdatingFromSettings={setIsUpdatingFromSettings} config={config}
+            setView={(v) => {
+              if (v === "setup") {
+                 setIsUpdatingFromSettings(true);
+                 setView("verify");
+              } else {
+                 setView(v);
+              }
+            }}
+            setIsUpdatingFromSettings={setIsUpdatingFromSettings} config={config}
             updateConfig={updateConfig} setShowResetConfirm={setShowResetConfirm}
           />
         )}
@@ -308,6 +392,7 @@ function App() {
           <Gatekeeper 
             blockedApp={blockedApp} authMode={authMode} gatekeeperPIN={gatekeeperPIN} error={error}
             isLaunching={isLaunching} gatekeeperInputRef={gatekeeperInputRef} setGatekeeperPIN={setGatekeeperPIN}
+            setError={setError}
             handleGatekeeperUnlock={handleGatekeeperUnlock} closeWindow={async () => { const { getCurrentWindow } = await import("@tauri-apps/api/window"); getCurrentWindow().close(); }}
           />
         )}
@@ -323,6 +408,19 @@ function App() {
               <div className={styles.modalActions}>
                 <button className={styles.modalCancel} onClick={() => setAppToRemove(null)}>Cancel</button>
                 <button className={styles.modalConfirm} onClick={confirmRemoval}>Remove Lock</button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+        {appsToBulkUnlock && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className={styles.modalOverlay}>
+            <motion.div initial={{ scale: 0.95 }} animate={{ scale: 1 }} className={styles.modalCard}>
+              <div className={styles.modalIcon}><AlertCircle size={40} color="var(--error-color)" /></div>
+              <h3>Unlock Multiple?</h3>
+              <p>Are you sure you want to remove protection from <strong>{appsToBulkUnlock.length}</strong> applications?</p>
+              <div className={styles.modalActions}>
+                <button className={styles.modalCancel} onClick={() => setAppsToBulkUnlock(null)}>Cancel</button>
+                <button className={styles.modalConfirm} onClick={confirmBulkUnlock}>Remove Locks</button>
               </div>
             </motion.div>
           </motion.div>

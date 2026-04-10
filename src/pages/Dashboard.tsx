@@ -1,10 +1,10 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Unlock, Shield, Search, ShieldCheck, ArrowRight, LogOut, Settings, User, Monitor, RotateCcw, Home } from "lucide-react";
+import { Lock, Unlock, Shield, Search, ShieldCheck, ArrowRight, LogOut, Settings, User, Monitor, RotateCcw, Home, CheckSquare, Square, Trash2, X, MousePointer2 } from "lucide-react";
+import { useState, useMemo } from "react";
 import clsx from "clsx";
 import styles from "../styles/App.module.css";
 import logo from "../assets/logo.png";
 import { Tab, InstalledApp, LockedApp, AppConfig, AuthMode } from "../types";
-import { CountUp } from "../components/CountUp";
 import { ModernSelect } from "../components/ModernSelect";
 import { GithubIcon } from "../components/GithubIcon";
 
@@ -13,6 +13,7 @@ interface DashboardProps {
   activeTab: Tab;
   setActiveTab: (tab: Tab) => void;
   showUpdateSuccess: boolean;
+  toast: { message: string, visible: boolean, type: 'lock' | 'unlock' | 'success' };
   search: string;
   setSearch: (val: string) => void;
   placeholder: string;
@@ -20,7 +21,7 @@ interface DashboardProps {
   isScanning: boolean;
   allApps: InstalledApp[];
   lockedApps: LockedApp[];
-  toggleApp: (app: LockedApp | InstalledApp) => void;
+  toggleApp: (app: LockedApp | InstalledApp, fromTab?: Tab) => void;
   settingsTab: string;
   setSettingsTab: (tab: string) => void;
   authMode: AuthMode;
@@ -30,6 +31,7 @@ interface DashboardProps {
   config: AppConfig;
   updateConfig: (updates: Partial<AppConfig>) => void;
   setShowResetConfirm: (val: boolean) => void;
+  bulkUnlock: (apps: LockedApp[]) => void;
 }
 
 export const Dashboard = ({
@@ -37,6 +39,7 @@ export const Dashboard = ({
   activeTab,
   setActiveTab,
   showUpdateSuccess,
+  toast,
   search,
   setSearch,
   placeholder,
@@ -53,8 +56,30 @@ export const Dashboard = ({
   setIsUpdatingFromSettings,
   config,
   updateConfig,
-  setShowResetConfirm
+  setShowResetConfirm,
+  bulkUnlock
 }: DashboardProps) => {
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedNames, setSelectedNames] = useState<Set<string>>(new Set());
+
+  const toggleSelection = (name: string) => {
+    const newSelected = new Set(selectedNames);
+    if (newSelected.has(name)) newSelected.delete(name);
+    else newSelected.add(name);
+    setSelectedNames(newSelected);
+  };
+
+  const handleBulkUnlock = () => {
+    const appsToUnlock = lockedApps.filter(app => selectedNames.has(app.name));
+    bulkUnlock(appsToUnlock);
+    setSelectionMode(false);
+    setSelectedNames(new Set());
+  };
+
+  const appsToShow = useMemo(() => {
+    const list = activeTab === "all" ? lockedApps : allApps;
+    return list.filter(app => app.name.toLowerCase().includes(search.toLowerCase()));
+  }, [activeTab, lockedApps, allApps, search]);
   return (
     <motion.div
       key="dashboard"
@@ -65,15 +90,17 @@ export const Dashboard = ({
     >
       <header className={styles.header}>
         <AnimatePresence>
-          {showUpdateSuccess && (
+          {(showUpdateSuccess || toast.visible) && (
             <motion.div
               initial={{ opacity: 0, y: -20, x: '-50%' }}
               animate={{ opacity: 1, y: 0, x: '-50%' }}
               exit={{ opacity: 0, y: -20, x: '-50%' }}
-              className={styles.successToast}
+              className={clsx(styles.successToast, toast.type === 'lock' && styles.toastLock, toast.type === 'unlock' && styles.toastUnlock)}
             >
-              <ShieldCheck size={16} />
-              <span>Credentials Updated Successfully</span>
+              {toast.type === 'lock' && <Lock size={16} />}
+              {toast.type === 'unlock' && <Unlock size={16} />}
+              {toast.type === 'success' && <ShieldCheck size={16} />}
+              <span>{toast.visible ? toast.message : "Credentials Updated Successfully"}</span>
             </motion.div>
           )}
         </AnimatePresence>
@@ -85,11 +112,11 @@ export const Dashboard = ({
           <button className={clsx(styles.tab, activeTab === "home" && styles.tabActive)} onClick={() => setActiveTab("home")}>
             <Home size={18} /> <span>Home</span>
           </button>
-          <button className={clsx(styles.tab, activeTab === "all" && styles.tabActive)} onClick={() => setActiveTab("all")}>
-            <Lock size={18} /> <span>Locked Apps</span>
-          </button>
           <button className={clsx(styles.tab, activeTab === "system" && styles.tabActive)} onClick={() => setActiveTab("system")}>
             <Unlock size={18} /> <span>Unlocked Apps</span>
+          </button>
+          <button className={clsx(styles.tab, activeTab === "all" && styles.tabActive)} onClick={() => setActiveTab("all")}>
+            <Lock size={18} /> <span>Locked Apps</span>
           </button>
           <button className={clsx(styles.tab, activeTab === "settings" && styles.tabActive)} onClick={() => setActiveTab("settings")}>
             <Settings size={18} /> <span>Settings</span>
@@ -117,11 +144,25 @@ export const Dashboard = ({
       <div className={styles.listDivider}>
         <div className={styles.dividerLine} />
         {(activeTab === "all" || activeTab === "system") && !isScanning && (() => {
-          const count = (activeTab === "all" ? lockedApps : allApps).filter(app => app.name.toLowerCase().includes(search.toLowerCase())).length;
+          const count = appsToShow.length;
           return (
-            <span className={styles.dividerText}>
-              {count === 0 ? "No Apps Found" : `${count} ${count === 1 ? "App" : "Apps"} Found`}
-            </span>
+            <div className={styles.dividerControls}>
+              <span className={styles.dividerText}>
+                {count === 0 ? "No Apps Found" : `${count} ${count === 1 ? "App" : "Apps"} Found`}
+              </span>
+              {activeTab === "all" && count > 0 && (
+                <button
+                  className={clsx(styles.selectionToggle, selectionMode && styles.selectionToggleActive)}
+                  onClick={() => {
+                    setSelectionMode(!selectionMode);
+                    setSelectedNames(new Set());
+                  }}
+                >
+                  {selectionMode ? <X size={14} /> : <MousePointer2 size={14} />}
+                  {selectionMode ? "Cancel" : "Select"}
+                </button>
+              )}
+            </div>
           )
         })()}
         {(activeTab === "all" || activeTab === "system") && !isScanning && <div className={styles.dividerLine} />}
@@ -148,17 +189,17 @@ export const Dashboard = ({
 
             <div className={styles.minimalStats}>
               <div className={styles.minStat}>
-                {isScanning ? <div className={styles.skeletonValue} /> : <span className={styles.minStatValue}><CountUp value={allApps.length} /></span>}
+                {isScanning ? <div className={styles.skeletonValue} /> : <span className={styles.minStatValue}>{allApps.length}</span>}
                 <span className={styles.minStatLabel}>Total Apps</span>
               </div>
               <div className={styles.minStatDivider} />
               <div className={styles.minStat}>
-                {isScanning ? <div className={styles.skeletonValue} /> : <span className={styles.minStatValue}><CountUp value={lockedApps.length} color="var(--accent-color)" /></span>}
+                {isScanning ? <div className={styles.skeletonValue} /> : <span className={styles.minStatValue} style={{ color: "var(--accent-color)" }}>{lockedApps.length}</span>}
                 <span className={styles.minStatLabel}>Locked</span>
               </div>
             </div>
 
-            <button className={styles.minimalAction} onClick={() => setActiveTab("all")}>
+            <button className={styles.minimalAction} onClick={() => setActiveTab("system")}>
               Manage Protection <ArrowRight size={18} />
             </button>
           </motion.div>
@@ -331,31 +372,77 @@ export const Dashboard = ({
               </div>
             ) : (
               <div className={styles.appList}>
-                {(activeTab === "all" ? lockedApps : allApps)
-                  .filter(app => app.name.toLowerCase().includes(search.toLowerCase()))
-                  .map(app => {
-                    const isLocked = lockedApps.some(la => la.name === app.name);
-                    return (
-                      <motion.div layout key={app.name} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.4 }} whileHover={{ y: -2 }} className={clsx(styles.appCard, isLocked && styles.appCardLocked)} onClick={() => toggleApp(app)}>
-                        {isLocked && <div className={styles.lockedBadge}><Lock size={8} /> LOCKED</div>}
-                        <div className={styles.appIconContainer}>
-                          {app.icon ? <img src={app.icon} className={styles.appIconImg} alt="" /> : <img src={logo} className={styles.appIconImg} style={{ opacity: isLocked ? 1 : 0.4 }} alt="" />}
+                {appsToShow.map(app => {
+                  const isLocked = lockedApps.some(la => la.name === app.name);
+                  const isSelected = selectedNames.has(app.name);
+
+                  return (
+                    <motion.div
+                      layout
+                      key={app.name}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.4 }}
+                      whileHover={{ y: -2 }}
+                      className={clsx(
+                        styles.appCard,
+                        isLocked && styles.appCardLocked,
+                        isSelected && styles.appCardSelected,
+                        selectionMode && activeTab === "all" && styles.appCardSelectable
+                      )}
+                      onClick={() => {
+                        if (selectionMode && activeTab === "all") {
+                          toggleSelection(app.name);
+                        } else {
+                          toggleApp(app, activeTab);
+                        }
+                      }}
+                    >
+                      {selectionMode && activeTab === "all" && (
+                        <div className={styles.selectionIndicator}>
+                          {isSelected ? <CheckSquare size={18} color="var(--accent-color)" /> : <Square size={18} opacity={0.3} />}
                         </div>
-                        <div className={styles.appInfo}>
-                          <div className={styles.appName}>{app.name}</div>
-                          <div className={styles.appPath}>{(app as any).exec_name || (app as any).path}</div>
-                        </div>
-                        <div className={styles.lockIndicator}>
-                          {isLocked ? <Lock size={18} className={styles.lockedIcon} /> : <Unlock size={18} style={{ opacity: 0.2 }} />}
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+                      )}
+                      {isLocked && !selectionMode && <div className={styles.lockedBadge}><Lock size={8} /> LOCKED</div>}
+                      <div className={styles.appIconContainer}>
+                        {app.icon ? <img src={app.icon} className={styles.appIconImg} alt="" /> : <img src={logo} className={styles.appIconImg} style={{ opacity: isLocked ? 1 : 0.4 }} alt="" />}
+                      </div>
+                      <div className={styles.appInfo}>
+                        <div className={styles.appName}>{app.name}</div>
+                        <div className={styles.appPath}>{(app as any).exec_name || (app as any).path}</div>
+                      </div>
+                      <div className={styles.lockIndicator}>
+                        {isLocked ? <Lock size={18} className={styles.lockedIcon} /> : <Unlock size={18} style={{ opacity: 0.2 }} />}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             )}
           </motion.div>
         )}
       </main>
+
+      <AnimatePresence>
+        {selectionMode && selectedNames.size > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, x: "-50%" }}
+            animate={{ opacity: 1, y: 0, x: "-50%" }}
+            exit={{ opacity: 0, y: 50, x: "-50%" }}
+            className={styles.bulkActionBar}
+          >
+            <div className={styles.bulkActionInfo}>
+              <span className={styles.selectionCount}>{selectedNames.size}</span>
+              <span className={styles.selectionLabel}>Apps Selected</span>
+            </div>
+            <div className={styles.bulkActionButtons}>
+              <button className={styles.bulkUnlockBtn} onClick={handleBulkUnlock}>
+                <Trash2 size={16} /> Unlock Selection
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 };

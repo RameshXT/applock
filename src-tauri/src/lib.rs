@@ -39,6 +39,22 @@ pub fn run() {
             tauri::async_runtime::spawn(async move {
                 start_monitor(app_handle, state).await;
             });
+
+            // Set window size to 85% width and 80% height of the monitor
+            if let Some(window) = app.get_webview_window("main") {
+                if let Some(monitor) = window.primary_monitor()? {
+                    let monitor_size = monitor.size();
+                    let w = (monitor_size.width as f64 * 0.85) as u32;
+                    let h = (monitor_size.height as f64 * 0.80) as u32;
+                    
+                    window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                        width: w,
+                        height: h,
+                    }))?;
+                    window.center()?;
+                    window.show()?;
+                }
+            }
             
             Ok(())
         })
