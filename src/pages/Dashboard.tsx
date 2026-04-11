@@ -222,7 +222,7 @@ export const Dashboard = ({
                 <User size={18} /> Account & Setup
               </button>
               <button className={clsx(styles.settingsNavBtn, settingsTab === "security" && styles.settingsNavBtnActive)} onClick={() => setSettingsTab("security")}>
-                <ShieldCheck size={18} /> Security Policy
+                <ShieldCheck size={18} color="#888" /> Security Policy
               </button>
               <button className={clsx(styles.settingsNavBtn, settingsTab === "system" && styles.settingsNavBtnActive)} onClick={() => setSettingsTab("system")}>
                 <Monitor size={18} /> System & Style
@@ -356,13 +356,25 @@ export const Dashboard = ({
               )}
 
               <footer className={styles.settingsFooter}>
-                <div style={{ flex: 1, display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                  <span style={{ fontSize: '0.65rem', fontWeight: 800, color: 'var(--accent-color)', letterSpacing: '0.1em' }}>{appName.toUpperCase()}</span>
-                  <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }} />
-                  <span style={{ fontSize: '0.7rem', fontWeight: 500, color: '#fff', opacity: 0.3 }}>V1.0.4</span>
+                <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: '0.6rem' }}>
+                  <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', opacity: 0.8, letterSpacing: '-0.01em' }}>{appName}</span>
+                  <span style={{ 
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '0.6rem', 
+                    fontWeight: 700, 
+                    padding: '1px 6px',
+                    background: 'rgba(255,255,255,0.03)', 
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '4px',
+                    color: 'var(--accent-color)',
+                    textTransform: 'lowercase',
+                    transform: 'translateY(-1px)' // Optical adjustment for baseline
+                  }}>v1.0.4</span>
                 </div>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-                  <ShieldCheck size={12} color="var(--accent-color)" style={{ opacity: 0.5 }} />
+                  <ShieldCheck size={12} color="#888" />
                   <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', color: '#fff', opacity: 0.3 }}>VERIFIED</span>
                 </div>
                 <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem' }}>
