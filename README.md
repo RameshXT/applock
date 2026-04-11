@@ -4,7 +4,7 @@
   <p><strong>A professional, high-security application locker for Windows.</strong></p>
 
   [![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Version](https://img.shields.io/badge/version-0.1.0-orange.svg)](https://github.com/RameshXT/applock/releases)
+  [![Version](https://img.shields.io/badge/version-0.1.0-orange.svg)](https://github.com/RameshXT/windows-applock/releases)
   [![Platform](https://img.shields.io/badge/platform-Windows-0078d7.svg)](https://www.microsoft.com/windows)
   [![Framework](https://img.shields.io/badge/built%20with-Tauri-24c8db.svg)](https://tauri.app/)
 </div>
@@ -52,8 +52,8 @@ Before you begin, ensure you have the following installed:
 ### Setup Steps
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/RameshXT/applock.git
-   cd applock
+   git clone https://github.com/RameshXT/windows-applock.git
+   cd windows-applock
    ```
 
 2. **Install dependencies:**
@@ -163,7 +163,7 @@ This project is licensed under the **MIT License**. See the [LICENSE](LICENSE) f
 ## Issues and Support
 
 Found a bug? Have a feature request?
-- **Bug Reports**: Open an issue [here](https://github.com/RameshXT/applock/issues).
+- **Bug Reports**: Open an issue [here](https://github.com/RameshXT/windows-applock/issues).
 - **Security Vulnerabilities**: Please DM the maintainers directly.
 - **General Support**: Join our community discussion board.
 
