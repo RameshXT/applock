@@ -1,6 +1,6 @@
 import React, { RefObject } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Shield, AlertCircle, ArrowRight } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import clsx from "clsx";
 import styles from "../styles/App.module.css";
 import logo from "../assets/logo.png";
