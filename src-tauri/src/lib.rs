@@ -42,8 +42,14 @@ pub fn run() {
                 start_monitor(app_handle, state).await;
             });
 
-            // Start window in maximized mode
+            // Start window in maximized mode with 75% width and 80% height minimum size
             if let Some(window) = app.get_webview_window("main") {
+                if let Ok(Some(monitor)) = window.primary_monitor() {
+                    let size = monitor.size();
+                    let min_width = (size.width as f64 * 0.75) as u32;
+                    let min_height = (size.height as f64 * 0.80) as u32;
+                    let _ = window.set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize::new(min_width, min_height))));
+                }
                 window.maximize()?;
                 window.show()?;
             }
