@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Unlock, Shield, Search, ShieldCheck, ArrowRight, LogOut, Settings, User, Monitor, RotateCcw, Home, CheckSquare, Square, Trash2, X, MousePointer2 } from "lucide-react";
+import { Lock, Unlock, Search, ShieldCheck, ArrowRight, LogOut, Settings, User, Monitor, RotateCcw, Home, CheckSquare, Square, Trash2, X, MousePointer2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import clsx from "clsx";
 import styles from "../styles/App.module.css";
@@ -378,7 +378,7 @@ export const Dashboard = ({
               <div className={styles.emptyState}>
                 <div className={styles.premiumLoader}>
                   <motion.div className={styles.loaderRing} animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
-                  <Shield size={20} className={styles.loaderIcon} />
+                  <img src={logo} style={{ width: 28, height: 28, objectFit: 'contain' }} className={styles.loaderIcon} alt="" />
                 </div>
                 <span className={styles.loaderText}>Scanning Workspace</span>
               </div>
