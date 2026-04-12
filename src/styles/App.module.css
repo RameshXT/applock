@@ -2511,6 +2511,7 @@
   justify-content: center;
   position: relative;
   margin-bottom: 0.5rem;
+  overflow: hidden; /* For shine containment */
 }
 
 .shieldBaseIcon {
@@ -2524,50 +2525,69 @@
   transform: translate(-50%, -50%);
 }
 
+.statusLogoShine {
+  position: absolute;
+  top: 0;
+  left: -200%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    120deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.05) 45%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0.05) 55%,
+    transparent 70%
+  );
+  transform: skewX(-25deg);
+  animation: logoShineSweep 5s infinite cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: 6;
+  pointer-events: none;
+}
+
+@keyframes logoShineSweep {
+  0% { left: -200%; }
+  20% { left: 200%; }
+  100% { left: 200%; }
+}
+
 .statusShield::after {
   content: '';
   position: absolute;
-  top: 50%; left: 50%;
+  top: 50%;
+  left: 50%;
   transform: translate(-50%, -50%);
-  width: 140px;
-  height: 140px;
+  width: 100px;
+  height: 100px;
   background: var(--accent-color);
-  opacity: 0.08;
-  filter: blur(60px);
+  opacity: 0.15;
+  filter: blur(40px);
   border-radius: 50%;
   z-index: -1;
 }
 
 @keyframes shieldPulse {
-  0%, 100% { opacity: 0.1; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.2; transform: translate(-50%, -50%) scale(1.08); }
-}
 
-.logoWrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-  overflow: hidden;
-  /* Use logo as mask to prevent boxy shine */
-  -webkit-mask-image: url('../assets/logo.png');
-  -webkit-mask-size: 80px 80px;
-  -webkit-mask-repeat: no-repeat;
-  -webkit-mask-position: center;
-  mask-image: url('../assets/logo.png');
-  mask-size: 80px 80px;
-  mask-repeat: no-repeat;
-  mask-position: center;
+  0%,
+  100% {
+    opacity: 0.1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  50% {
+    opacity: 0.2;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
 }
 
 .statusLogoGlow {
   position: absolute;
-  width: 120px;
-  height: 120px;
-  background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
-  opacity: 0.2;
-  filter: blur(30px);
+  width: 90px;
+  height: 90px;
+  background: var(--accent-color);
+  opacity: 0.25;
+  filter: blur(40px);
+  border-radius: 50%;
   pointer-events: none;
   z-index: 3;
 }
@@ -2576,35 +2596,21 @@
   width: 80px;
   height: 80px;
   object-fit: contain;
+  z-index: 5;
   filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.35));
-}
-
-.shineEffect {
-  position: absolute;
-  top: 0;
-  left: -150%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.2) 50%,
-    transparent 100%
-  );
-  transform: skewX(-20deg);
-  animation: shineSweep 4s infinite;
-  pointer-events: none;
-}
-
-@keyframes shineSweep {
-  0% { left: -150%; }
-  25% { left: 150%; }
-  100% { left: 150%; }
+  animation: logoFloat 6s ease-in-out infinite;
 }
 
 @keyframes logoFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 .statusInfo {
@@ -2651,7 +2657,9 @@
 .minimalStats::before {
   content: '';
   position: absolute;
-  top: 0; left: 0; right: 0;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
 }
@@ -2739,7 +2747,15 @@
 }
 
 @keyframes pulseSkeleton {
-  0% { opacity: 0.3; }
-  50% { opacity: 0.7; }
-  100% { opacity: 0.3; }
+  0% {
+    opacity: 0.3;
+  }
+
+  50% {
+    opacity: 0.7;
+  }
+
+  100% {
+    opacity: 0.3;
+  }
 }
