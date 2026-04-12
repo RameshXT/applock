@@ -2544,12 +2544,24 @@
   50% { opacity: 0.2; transform: translate(-50%, -50%) scale(1.08); }
 }
 
+.statusLogoGlow {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  background: var(--accent-color);
+  opacity: 0.25;
+  filter: blur(40px);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+}
+
 .statusLogoImage {
   width: 80px;
   height: 80px;
   object-fit: contain;
   z-index: 5;
-  filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.2));
+  filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.35));
   animation: logoFloat 6s ease-in-out infinite;
 }
 

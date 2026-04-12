@@ -190,7 +190,8 @@ export const Dashboard = ({
           >
             <div className={styles.homeStatusSection}>
               <div className={styles.statusShield}>
-                <Shield className={styles.shieldBaseIcon} size={180} />
+                <Shield className={styles.shieldBaseIcon} size={220} />
+                <div className={styles.statusLogoGlow} />
                 <img src={logo} className={styles.statusLogoImage} alt="" />
               </div>
               <div className={styles.statusInfo}>
