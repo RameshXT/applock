@@ -2529,11 +2529,11 @@
   position: absolute;
   top: 50%; left: 50%;
   transform: translate(-50%, -50%);
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 140px;
   background: var(--accent-color);
-  opacity: 0.15;
-  filter: blur(40px);
+  opacity: 0.08;
+  filter: blur(60px);
   border-radius: 50%;
   z-index: -1;
 }
@@ -2543,18 +2543,6 @@
   50% { opacity: 0.2; transform: translate(-50%, -50%) scale(1.08); }
 }
 
-.statusLogoGlow {
-  position: absolute;
-  width: 90px;
-  height: 90px;
-  background: var(--accent-color);
-  opacity: 0.25;
-  filter: blur(40px);
-  border-radius: 50%;
-  pointer-events: none;
-  z-index: 3;
-}
-
 .logoWrapper {
   position: relative;
   display: flex;
@@ -2562,7 +2550,26 @@
   justify-content: center;
   z-index: 5;
   overflow: hidden;
-  border-radius: 20px;
+  /* Use logo as mask to prevent boxy shine */
+  -webkit-mask-image: url('../assets/logo.png');
+  -webkit-mask-size: 80px 80px;
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-position: center;
+  mask-image: url('../assets/logo.png');
+  mask-size: 80px 80px;
+  mask-repeat: no-repeat;
+  mask-position: center;
+}
+
+.statusLogoGlow {
+  position: absolute;
+  width: 120px;
+  height: 120px;
+  background: radial-gradient(circle, var(--accent-color) 0%, transparent 70%);
+  opacity: 0.2;
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: 3;
 }
 
 .statusLogoImage {
