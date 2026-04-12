@@ -1,13 +1,14 @@
 import React from "react";
 import styles from "../../styles/App.module.css";
 import clsx from "clsx";
-import { User, ShieldCheck, Monitor, RotateCcw } from "lucide-react";
+import { User, ShieldCheck, Monitor, RotateCcw, Star } from "lucide-react";
 import { GithubIcon } from "../GithubIcon";
 import { AppConfig, AuthMode } from "../../types";
 import { AccountSetup } from "./AccountSetup";
 import { SecurityPolicy } from "./SecurityPolicy";
 import { SystemStyle } from "./SystemStyle";
 import { Contribution } from "./Contribution";
+import { Credits } from "./Credits";
 
 interface SettingsPageProps {
   appName: string;
@@ -61,6 +62,12 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         >
           <GithubIcon size={18} /> Contribution
         </button>
+        <button 
+          className={clsx(styles.settingsNavBtn, settingsTab === "credits" && styles.settingsNavBtnActive)} 
+          onClick={() => setSettingsTab("credits")}
+        >
+          <Star size={18} /> Credits
+        </button>
         <div style={{ flex: 1 }} />
         <button className={styles.dangerBtnMinimal} onClick={() => setShowResetConfirm(true)}>
           <RotateCcw size={18} /> Factory Reset
@@ -92,33 +99,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <Contribution appName={appName} />
         )}
 
-        <footer className={styles.settingsFooter}>
-          <div style={{ flex: 1, display: 'flex', alignItems: 'baseline', gap: '0.6rem' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#fff', opacity: 0.8, letterSpacing: '-0.01em' }}>{appName}</span>
-            <span style={{ 
-              display: 'inline-flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.6rem', 
-              fontWeight: 700, 
-              padding: '1px 6px',
-              background: 'rgba(255,255,255,0.03)', 
-              border: '1px solid rgba(255,255,255,0.08)',
-              borderRadius: '4px',
-              color: 'var(--accent-color)',
-              textTransform: 'lowercase',
-              transform: 'translateY(-1px)'
-            }}>v1.0.4</span>
-          </div>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}>
-            <ShieldCheck size={12} color="#888" />
-            <span style={{ fontSize: '0.6rem', fontWeight: 700, letterSpacing: '0.1em', color: '#fff', opacity: 0.3 }}>VERIFIED</span>
-          </div>
-          <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '0.4rem', fontSize: '0.7rem' }}>
-            <span style={{ opacity: 0.4 }}>Designed & Developed by</span>
-            <a href="https://rameshxt.pages.dev/" target="_blank" rel="noopener noreferrer" className={styles.developerLink}>Ramesh XT</a>
-          </div>
-        </footer>
+        {settingsTab === "credits" && (
+          <Credits appName={appName} />
+        )}
+
+
       </div>
     </div>
   );
