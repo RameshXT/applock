@@ -830,12 +830,13 @@
 }
 
 .emptyState {
-  grid-column: 1 / -1;
+  flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 6rem 2rem;
+  min-height: 50vh;
   color: var(--text-secondary);
   gap: 1.25rem;
   text-align: center;
@@ -845,36 +846,49 @@
 }
 
 .premiumLoader {
-  position: relative;
-  width: 48px;
-  height: 48px;
+  width: 72px;
+  height: 72px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-bottom: 0.5rem;
+  position: relative;
+  margin-bottom: 2rem;
 }
 
 .loaderRing {
   position: absolute;
   width: 100%;
   height: 100%;
-  border: 2px solid rgba(59, 130, 246, 0.05);
-  border-top: 2px solid var(--accent-color);
+  border: 1.5px solid rgba(59, 130, 246, 0.05);
+  border-top: 1.5px solid var(--accent-color);
   border-radius: 50%;
+  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.2));
 }
 
 .loaderIcon {
-  color: var(--accent-color);
-  opacity: 0.5;
-  filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.3));
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.4));
+  animation: loaderPulse 2s infinite ease-in-out;
+}
+
+@keyframes loaderPulse {
+  0%, 100% {
+    transform: scale(0.9);
+    opacity: 0.6;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 1;
+  }
 }
 
 .loaderContent {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  margin-top: 0.75rem;
+  gap: 0.5rem;
   text-align: center;
 }
 
