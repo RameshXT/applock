@@ -75,36 +75,7 @@ export const Contribution: React.FC<ContributionProps> = ({
         </a>
       </div>
 
-      <div className={styles.workflowSection}>
-        <h3 className={styles.workflowTitle}>How it works</h3>
-        <div className={styles.workflowSteps}>
-          <div className={styles.workflowConnector} />
-          
-          <div className={styles.workflowStep}>
-            <div className={styles.stepNumber}>1</div>
-            <span className={styles.stepLabel}>Fork</span>
-            <span className={styles.stepDesc}>Copy repo</span>
-          </div>
 
-          <div className={styles.workflowStep}>
-            <div className={styles.stepNumber}>2</div>
-            <span className={styles.stepLabel}>Branch</span>
-            <span className={styles.stepDesc}>Create feature</span>
-          </div>
-
-          <div className={styles.workflowStep}>
-            <div className={styles.stepNumber}>3</div>
-            <span className={styles.stepLabel}>Push</span>
-            <span className={styles.stepDesc}>Commit code</span>
-          </div>
-
-          <div className={styles.workflowStep}>
-            <div className={styles.stepNumber}>4</div>
-            <span className={styles.stepLabel}>Merge</span>
-            <span className={styles.stepDesc}>Pull Request</span>
-          </div>
-        </div>
-      </div>
     </section>
   );
 };
