@@ -1429,20 +1429,24 @@
   transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   cursor: pointer;
   background: transparent;
-  border: none;
+  border: 1px solid transparent;
   opacity: 0.7;
 }
 
 .settingsNavBtn:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(59, 130, 246, 0.08);
+  border-color: var(--accent-color);
   color: #fff;
   opacity: 1;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.15);
 }
 
 .settingsNavBtnActive {
-  background: rgba(59, 130, 246, 0.1) !important;
-  color: var(--accent-color) !important;
+  background: rgba(59, 130, 246, 0.12) !important;
+  border-color: var(--accent-color) !important;
+  color: #fff !important;
   opacity: 1 !important;
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
 .settingsNavBtn svg {
