@@ -212,7 +212,7 @@ export const Dashboard = ({
                     transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
                     className={styles.statusSubtitle}
                   >
-                    System perimeter is currently secured
+                    Protection is active
                   </motion.p>
                 </div>
             </div>

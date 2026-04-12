@@ -43,7 +43,7 @@ export const Unlock = ({
       <div className={styles.unlockIcon}><img src={logo} style={{ width: 100, height: 100, objectFit: 'contain' }} alt={appName} /></div>
       <div className={styles.unlockTitle}>{isVerify ? "Identity Verification" : `${appName} Access`}</div>
       <p style={{ opacity: 0.5, fontSize: '0.8rem', marginTop: '-0.5rem', marginBottom: '1.5rem' }}>
-        {isVerify ? "Please confirm your current security credentials" : "System perimeter is currently secured"}
+        {isVerify ? "Please confirm your current security credentials" : "Protection is active"}
       </p>
       
       <form onSubmit={handleUnlock} className={styles.unlockInputWrapper} style={{ gap: '2.5rem' }}>
