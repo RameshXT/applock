@@ -39,6 +39,12 @@ pub struct AppConfig {
     pub protection_persistence: Option<bool>,
     pub wrong_attempts: Option<u32>,
     pub lockout_until: Option<u64>, // timestamp
+    pub recovery_hint: Option<String>,
+    pub display_name: Option<String>,
+    pub profile_picture: Option<String>,
+    pub biometrics_enabled: Option<bool>,
+    pub last_credential_change: Option<u64>,
+    pub recovery_key: Option<String>,
 }
 
 impl Default for AppConfig {
@@ -63,6 +69,12 @@ impl Default for AppConfig {
             protection_persistence: Some(true),
             wrong_attempts: Some(0),
             lockout_until: None,
+            recovery_hint: None,
+            display_name: Some("User".to_string()),
+            profile_picture: None,
+            biometrics_enabled: Some(false),
+            last_credential_change: None,
+            recovery_key: None,
         }
     }
 }

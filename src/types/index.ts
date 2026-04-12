@@ -35,4 +35,10 @@ export interface AppConfig {
   protection_persistence?: boolean;
   wrong_attempts?: number;
   lockout_until?: number;
+  recovery_hint?: string;
+  display_name?: string;
+  profile_picture?: string;
+  biometrics_enabled?: boolean;
+  last_credential_change?: number;
+  recovery_key?: string;
 }

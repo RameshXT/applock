@@ -82,8 +82,12 @@ export const Gatekeeper = ({
         >
           {blockedApp?.icon ? <img src={blockedApp.icon} alt={blockedApp.name} className={styles.appLogo} /> : <Lock size={36} color="var(--accent-color)" />}
         </motion.div>
-        <h2 className={styles.gatekeeperTitle}>{blockedApp?.name || "Access Restricted"}</h2>
-        <p className={styles.gatekeeperSubtitle}>Please authenticate to continue</p>
+        <h2 className={styles.gatekeeperTitle}>
+          {config.display_name ? `Welcome back, ${config.display_name}` : (blockedApp?.name || "Access Restricted")}
+        </h2>
+        <p className={styles.gatekeeperSubtitle}>
+           {blockedApp ? `Authenticate to access ${blockedApp.name}` : "Please verify your entry protocol"}
+        </p>
       </div>
 
       {timeLeft > 0 ? (
@@ -98,6 +102,13 @@ export const Gatekeeper = ({
            <h3 className={styles.lockoutTitle}>Security Lockout</h3>
            <p className={styles.lockoutText}>Cooldown active. Try again in:</p>
            <div className={styles.countdownTimer}>{timeLeft}s</div>
+           
+           {config.recovery_hint && (
+             <div className={styles.recoveryHintBox}>
+               <span className={styles.hintLabel}>Recovery Hint:</span>
+               <span className={styles.hintText}>{config.recovery_hint}</span>
+             </div>
+           )}
         </div>
       ) : (
         <form onSubmit={handleGatekeeperUnlock} className={styles.gatekeeperForm} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
@@ -154,9 +165,20 @@ export const Gatekeeper = ({
 
               <div className={styles.attemptInfo}>
                  {attempts > 0 ? (
-                   <span style={{ color: attempts >= limit - 1 ? '#EF233C' : 'inherit' }}>
-                     {attempts} of {limit} attempts
-                   </span>
+                   <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center' }}>
+                     <span style={{ color: attempts >= limit - 1 ? '#EF233C' : 'inherit' }}>
+                       {attempts} of {limit} attempts
+                     </span>
+                     {attempts >= 2 && config.recovery_hint && (
+                       <button 
+                         type="button" 
+                         className={styles.textLink}
+                         onClick={() => alert(`Your Hint: ${config.recovery_hint}`)}
+                       >
+                         Forgot? Get Hint
+                       </button>
+                     )}
+                   </div>
                  ) : "Secure Session"}
               </div>
 

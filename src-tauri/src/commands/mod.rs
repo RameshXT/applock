@@ -35,6 +35,13 @@ pub async fn setup_password(password: String, mode: AuthMode, state: State<'_, A
     let mut config = state.config.lock().unwrap();
     config.hashed_password = security::hash_password(&password);
     config.auth_mode = Some(mode);
+    
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64;
+    config.last_credential_change = Some(now);
+    
     save_config(&config, &state.config_path)?;
     Ok(())
 }
@@ -74,7 +81,20 @@ pub async fn update_settings(new_config: AppConfig, state: State<'_, Arc<AppStat
         }
     }
 
-    *config = new_config;
+    // Update last_credential_change if hashed_password was modified manually? 
+    // Usually handled by setup_password, but let's check.
+    if config.hashed_password != new_config.hashed_password {
+        let now = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_millis() as u64;
+        let mut final_config = new_config.clone();
+        final_config.last_credential_change = Some(now);
+        *config = final_config;
+    } else {
+        *config = new_config;
+    }
+
     save_config(&config, &state.config_path)?;
     Ok(())
 }
@@ -116,19 +136,29 @@ fn verify_impl(password: &str, config: &mut AppConfig, state: &Arc<AppState>) ->
         }
     }
 
-    let is_valid = security::verify_password(password, &config.hashed_password);
+    let mut is_valid = security::verify_password(password, &config.hashed_password);
+
+    // Support Recovery Key
+    if !is_valid {
+        if let Some(ref rkey) = config.recovery_key {
+            if password.trim().to_uppercase() == rkey.to_uppercase() {
+                println!("[Auth] Recovery Key matched! Granting access.");
+                is_valid = true;
+            }
+        }
+    }
 
     if is_valid {
-        println!("[Auth] Code matched. Granting access.");
+        println!("[Auth] Access granted.");
         let mut unlocked = state.is_unlocked.lock().unwrap();
         *unlocked = true;
         config.wrong_attempts = Some(0);
     } else {
         let attempts = config.wrong_attempts.unwrap_or(0) + 1;
-        println!("[Auth] Code MISMATCH. Attempts: {}/{}", attempts, config.attempt_limit.unwrap_or(5));
+        println!("[Auth] Credentials MISMATCH. Attempts: {}/{}", attempts, config.attempt_limit.unwrap_or(3));
         config.wrong_attempts = Some(attempts);
         
-        let limit = config.attempt_limit.unwrap_or(5);
+        let limit = config.attempt_limit.unwrap_or(3);
         if attempts >= limit {
             let duration = config.lockout_duration.unwrap_or(30); 
             let now = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_secs();
