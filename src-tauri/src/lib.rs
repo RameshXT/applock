@@ -32,14 +32,17 @@ pub fn run() {
                 authorized_paths: Mutex::new(std::collections::HashMap::new()),
                 last_success_time: Mutex::new(None),
                 recently_killed: Mutex::new(std::collections::HashMap::new()),
-                active_blocked_app: Mutex::new(None)    ,
+                active_blocked_app: Mutex::new(None),
+                min_window_size: Mutex::new((800, 600)),
+                was_maximized: Mutex::new(true),
             });
             
             app.manage(state.clone());
             
             let app_handle = app.handle().clone();
+            let monitor_state = state.clone();
             tauri::async_runtime::spawn(async move {
-                start_monitor(app_handle, state).await;
+                start_monitor(app_handle, monitor_state).await;
             });
 
             // Start window in maximized mode with 75% width and 80% height minimum size
@@ -49,6 +52,8 @@ pub fn run() {
                     let min_width = (size.width as f64 * 0.75) as u32;
                     let min_height = (size.height as f64 * 0.80) as u32;
                     let _ = window.set_min_size(Some(tauri::Size::Physical(tauri::PhysicalSize::new(min_width, min_height))));
+                    let mut mws = state.min_window_size.lock().unwrap();
+                    *mws = (min_width, min_height);
                 }
                 window.maximize()?;
                 window.show()?;
@@ -57,6 +62,20 @@ pub fn run() {
             Ok(())
         })
         .on_window_event(|window, event| {
+            if let tauri::WindowEvent::Resized(_) = event {
+                if window.label() == "main" {
+                    let is_max = window.is_maximized().unwrap_or(false);
+                    let state = window.state::<Arc<AppState>>();
+                    let mut was_max = state.was_maximized.lock().unwrap();
+                    
+                    if *was_max && !is_max {
+                        let min_size = state.min_window_size.lock().unwrap();
+                        let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize::new(min_size.0, min_size.1)));
+                        let _ = window.center();
+                    }
+                    *was_max = is_max;
+                }
+            }
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 let state = window.state::<Arc<AppState>>();
                 if window.label() == "main" {

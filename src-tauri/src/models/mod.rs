@@ -41,4 +41,6 @@ pub struct AppState {
     pub last_success_time: Mutex<Option<Instant>>,
     pub recently_killed: Mutex<HashMap<u32, Instant>>,
     pub active_blocked_app: Mutex<Option<LockedApp>>,
+    pub min_window_size: Mutex<(u32, u32)>,
+    pub was_maximized: Mutex<bool>,
 }
