@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="src-tauri/icons/icon.png" width="128" height="128" alt="Windows AppLock Logo">
+  <img src="src/assets/logo.png" width="128" height="128" alt="Windows AppLock Logo">
   <h1>Windows AppLock</h1>
   <p><strong>A professional, high-security application locker for Windows.</strong></p>
 
