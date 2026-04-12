@@ -215,7 +215,7 @@ export const Dashboard = ({
             </div>
 
             <button className={styles.minimalAction} onClick={() => setActiveTab("system")}>
-              Manage Protection
+              Start Protection
             </button>
           </motion.div>
         ) : activeTab === "settings" ? (
