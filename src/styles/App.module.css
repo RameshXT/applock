@@ -2522,7 +2522,6 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  animation: shieldPulse 4s ease-in-out infinite;
 }
 
 .statusShield::after {
@@ -2562,7 +2561,6 @@
   object-fit: contain;
   z-index: 5;
   filter: drop-shadow(0 0 25px rgba(59, 130, 246, 0.35));
-  animation: logoFloat 6s ease-in-out infinite;
 }
 
 @keyframes logoFloat {
