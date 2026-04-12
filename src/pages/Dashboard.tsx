@@ -199,9 +199,9 @@ export const Dashboard = ({
               <div className={styles.statusInfo}>
                 <div style={{ overflow: 'hidden' }}>
                   <motion.h2 
-                    initial={{ y: "100%" }}
+                    initial={{ y: "110%" }}
                     animate={{ y: 0 }}
-                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                    transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1], delay: 0.2 }}
                     className={styles.statusTitle}
                   >
                     {appName}
