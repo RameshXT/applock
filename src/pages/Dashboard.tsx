@@ -249,7 +249,10 @@ export const Dashboard = ({
                   <motion.div className={styles.loaderRing} animate={{ rotate: 360 }} transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }} />
                   <img src={logo} style={{ width: 28, height: 28, objectFit: 'contain' }} className={styles.loaderIcon} alt="" />
                 </div>
-                <span className={styles.loaderText}>Scanning Workspace</span>
+                <div className={styles.loaderContent}>
+                  <span className={styles.loaderText}>Scanning workspace..</span>
+                  <p className={styles.loaderSubtext}>This may take a few seconds.</p>
+                </div>
               </div>
             ) : (
               <div className={styles.appList}>
