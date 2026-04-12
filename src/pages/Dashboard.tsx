@@ -196,42 +196,41 @@ export const Dashboard = ({
                 <div className={styles.statusLogoShine} />
 
               </div>
-              <div className={styles.statusInfo}>
-                <motion.h2 
-                  initial="hidden"
-                  animate="visible"
-                  variants={{
-                    visible: { transition: { staggerChildren: 0.03, delayChildren: 0.2 } }
-                  }}
-                  className={styles.statusTitle}
-                  style={{ display: 'flex', justifyContent: 'center', pointerEvents: 'none', flexWrap: 'wrap' }}
-                >
-                  {appName.split("").map((char, i) => (
-                    <span key={i} style={{ overflow: 'hidden', display: 'inline-block' }}>
+                <div className={styles.statusInfo}>
+                  <motion.h2
+                    className={styles.statusTitle}
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      visible: { transition: { staggerChildren: 0.02, delayChildren: 0.2 } },
+                    }}
+                  >
+                    {appName.split("").map((char, index) => (
                       <motion.span
-                        style={{ display: 'inline-block' }}
+                        key={index}
+                        style={{ display: "inline-block", whiteSpace: "pre" }}
                         variants={{
-                          hidden: { y: "110%" },
-                          visible: { 
-                            y: 0, 
-                            transition: { duration: 1.2, ease: [0.19, 1, 0.22, 1] } 
-                          }
+                          hidden: { opacity: 0, y: 20 },
+                          visible: {
+                            opacity: 1,
+                            y: 0,
+                            transition: { duration: 1, ease: [0.19, 1, 0.22, 1] },
+                          },
                         }}
                       >
-                        {char === " " ? "\u00A0" : char}
+                        {char}
                       </motion.span>
-                    </span>
-                  ))}
-                </motion.h2>
-                <motion.p 
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8, duration: 0.8 }}
-                  className={styles.statusSubtitle}
-                >
-                  System perimeter is currently secured
-                </motion.p>
-              </div>
+                    ))}
+                  </motion.h2>
+                  <motion.p 
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.8, duration: 0.8, ease: "easeOut" }}
+                    className={styles.statusSubtitle}
+                  >
+                    System perimeter is currently secured
+                  </motion.p>
+                </div>
             </div>
 
             <div className={styles.minimalStats}>
