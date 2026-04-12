@@ -153,20 +153,25 @@ pub fn run() {
             }
         })
         .invoke_handler(tauri::generate_handler![
-            commands::check_setup, 
-            commands::setup_password, 
-            commands::verify_password,
-            commands::lock_session,
-            commands::get_apps,
-            commands::get_system_apps,
-            commands::save_selection,
-            commands::release_app,
-            commands::get_is_unlocked,
-            commands::get_blocked_app,
-            commands::get_config,
-            commands::update_settings,
-            commands::reset_app,
-            commands::verify_gatekeeper,
+            // Auth domain
+            commands::auth::check_setup,
+            commands::auth::setup_password,
+            commands::auth::verify_password,
+            commands::auth::verify_gatekeeper,
+            commands::auth::lock_session,
+            commands::auth::get_is_unlocked,
+            // Apps domain
+            commands::apps::get_apps,
+            commands::apps::get_system_apps,
+            commands::apps::save_selection,
+            // Config domain
+            commands::config::get_config,
+            commands::config::update_settings,
+            commands::config::reset_app,
+            // System domain
+            commands::system::get_blocked_app,
+            commands::system::release_app,
+            // Scanner (standalone service command)
             crate::services::detailed_scanner::get_detailed_apps
         ])
         .run(tauri::generate_context!())

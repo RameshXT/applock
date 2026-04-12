@@ -3,3 +3,4 @@ pub mod security;
 pub mod monitor;
 pub mod process_win;
 pub mod detailed_scanner;
+pub mod auth;
