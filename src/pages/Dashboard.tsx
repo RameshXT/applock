@@ -183,9 +183,9 @@ export const Dashboard = ({
         {activeTab === "home" ? (
           <motion.div
             key="home"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: "easeOut" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5 }}
             className={styles.homeMinimal}
           >
             <div className={styles.homeStatusSection}>
@@ -196,15 +196,26 @@ export const Dashboard = ({
                 <div className={styles.statusLogoShine} />
 
               </div>
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1, duration: 0.5 }}
-                className={styles.statusInfo}
-              >
-                <h2 className={styles.statusTitle}>{appName}</h2>
-                <p className={styles.statusSubtitle}>System perimeter is currently secured</p>
-              </motion.div>
+              <div className={styles.statusInfo}>
+                <div style={{ overflow: 'hidden' }}>
+                  <motion.h2 
+                    initial={{ y: "100%" }}
+                    animate={{ y: 0 }}
+                    transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.1 }}
+                    className={styles.statusTitle}
+                  >
+                    {appName}
+                  </motion.h2>
+                </div>
+                <motion.p 
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.4, duration: 0.5 }}
+                  className={styles.statusSubtitle}
+                >
+                  System perimeter is currently secured
+                </motion.p>
+              </div>
             </div>
 
             <div className={styles.minimalStats}>
