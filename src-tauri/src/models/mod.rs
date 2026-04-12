@@ -18,7 +18,7 @@ pub struct LockedApp {
     pub icon: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Default, Clone)]
+#[derive(Serialize, Deserialize, Clone)]
 pub struct AppConfig {
     pub hashed_password: String,
     pub locked_apps: Vec<LockedApp>,
@@ -31,8 +31,40 @@ pub struct AppConfig {
     pub notifications_enabled: Option<bool>,
     pub animations_intensity: Option<String>,
     pub autolock_on_sleep: Option<bool>,
+    pub auto_lock_duration: Option<u32>, // in minutes
+    pub panic_key: Option<String>,
+    pub grace_period: Option<u32>, // in seconds
+    pub strict_enforcement: Option<bool>,
+    pub immediate_relock: Option<bool>,
+    pub protection_persistence: Option<bool>,
     pub wrong_attempts: Option<u32>,
     pub lockout_until: Option<u64>, // timestamp
+}
+
+impl Default for AppConfig {
+    fn default() -> Self {
+        Self {
+            hashed_password: String::new(),
+            locked_apps: Vec::new(),
+            auth_mode: Some(AuthMode::PIN),
+            attempt_limit: Some(3),
+            lockout_duration: Some(30),
+            autostart: Some(true),
+            minimize_to_tray: Some(true),
+            stealth_mode: Some(false),
+            notifications_enabled: Some(true),
+            animations_intensity: Some("high".to_string()),
+            autolock_on_sleep: Some(true),
+            auto_lock_duration: Some(5),
+            panic_key: Some("Ctrl+Alt+L".to_string()),
+            grace_period: Some(15),
+            strict_enforcement: Some(true),
+            immediate_relock: Some(true),
+            protection_persistence: Some(true),
+            wrong_attempts: Some(0),
+            lockout_until: None,
+        }
+    }
 }
 
 pub struct AppState {

@@ -27,6 +27,12 @@ export interface AppConfig {
   notifications_enabled?: boolean;
   animations_intensity?: "high" | "low";
   autolock_on_sleep?: boolean;
+  auto_lock_duration?: number;
+  panic_key?: string;
+  grace_period?: number;
+  strict_enforcement?: boolean;
+  immediate_relock?: boolean;
+  protection_persistence?: boolean;
   wrong_attempts?: number;
   lockout_until?: number;
 }

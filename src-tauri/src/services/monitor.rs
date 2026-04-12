@@ -9,24 +9,44 @@ pub async fn start_monitor(app_handle: AppHandle, state: Arc<AppState>) {
     loop {
         let now = std::time::Instant::now();
 
-        // 1. Safety Fuse: If we just had a successful unlock, bypass everything for 5 seconds
-        // to prevent race conditions during relaunch.
-        let mut is_fuse_active = false;
+        // 1. Session Safety Checks
+        let (grace_duration, auto_lock_mins, notifications_on) = {
+            let cfg = state.config.lock().unwrap();
+            (cfg.grace_period.unwrap_or(0) as u64, cfg.auto_lock_duration.unwrap_or(0) as u64, cfg.notifications_enabled.unwrap_or(true))
+        };
+
+        // 2. Safety Fuse & Grace Period
+        // If we just had a successful unlock, bypass everything for the grace period (min 5s)
+        let mut is_grace_active = false;
         {
             let last_success = state.last_success_time.lock().unwrap();
             if let Some(time) = *last_success {
-                if now.duration_since(time) < std::time::Duration::from_secs(5) {
-                    is_fuse_active = true;
+                let diff = now.duration_since(time);
+                
+                // Handle Session Auto-Lock (if enabled)
+                if auto_lock_mins > 0 && diff > Duration::from_secs(auto_lock_mins * 60) {
+                     let mut unlocked = state.is_unlocked.lock().unwrap();
+                     if *unlocked {
+                         println!("[Security] Auto-Locking session due to inactivity.");
+                         *unlocked = false;
+                         if let Some(win) = app_handle.get_webview_window("main") {
+                             let _ = win.hide();
+                         }
+                     }
+                }
+
+                if diff < Duration::from_secs(grace_duration).max(Duration::from_secs(5)) {
+                    is_grace_active = true;
                 }
             }
         }
 
-        if is_fuse_active {
+        if is_grace_active {
             sleep(Duration::from_millis(500)).await;
             continue;
         }
 
-        // 2. Clean up expired authorizations
+        // 3. Clean up expired authorizations
         {
             let mut auth_paths = state.authorized_paths.lock().unwrap();
             auth_paths.retain(|_, expiry| *expiry > now);
@@ -146,8 +166,7 @@ pub async fn start_monitor(app_handle: AppHandle, state: Arc<AppState>) {
                     let is_same = active.as_ref().map(|a| a.id == app.id).unwrap_or(false);
                     
                     // Notifications logic (if enabled)
-                    let cfg = state.config.lock().unwrap();
-                    if !is_same && cfg.notifications_enabled.unwrap_or(true) {
+                    if !is_same && notifications_on {
                         use tauri_plugin_notification::NotificationExt;
                         let _ = app_handle.notification()
                             .builder()

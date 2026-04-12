@@ -17,7 +17,24 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
+            // Register Panic Shortcut (Ctrl+Alt+L)
+            use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut, Modifiers, Code, ShortcutState};
+            let panic_shortcut = Shortcut::new(Some(Modifiers::CONTROL | Modifiers::ALT), Code::KeyL);
+            let _ = app.global_shortcut().on_shortcut(panic_shortcut, move |app, shortcut, event| {
+                if event.state() == ShortcutState::Pressed && shortcut == &panic_shortcut {
+                    let state = app.state::<Arc<AppState>>();
+                    let mut unlocked = state.is_unlocked.lock().unwrap();
+                    *unlocked = false;
+                    if let Some(window) = app.get_webview_window("main") {
+                         let _ = window.hide();
+                    }
+                    println!("[Panic] Security Lockdown Triggered.");
+                }
+            });
+            let _ = app.global_shortcut().register(panic_shortcut);
+
             let config_path = app.path().app_config_dir().unwrap();
             fs::create_dir_all(&config_path).unwrap();
             let config_file = config_path.join("config.enc");
