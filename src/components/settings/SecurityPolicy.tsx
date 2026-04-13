@@ -7,57 +7,57 @@ import { graceSessionService, GraceSettings } from "../../services/graceSessionS
 import { useEffect, useState } from "react";
 
 const GraceSettingsControl: React.FC = () => {
-    const [settings, setSettings] = useState<GraceSettings | null>(null);
+  const [settings, setSettings] = useState<GraceSettings | null>(null);
 
-    useEffect(() => {
-        graceSessionService.getGraceSettings().then(setSettings);
-    }, []);
+  useEffect(() => {
+    graceSessionService.getGraceSettings().then(setSettings);
+  }, []);
 
-    if (!settings) return null;
+  if (!settings) return null;
 
-    const update = async (updates: Partial<GraceSettings>) => {
-        const newSettings = { ...settings, ...updates };
-        setSettings(newSettings);
-        await graceSessionService.updateGraceSettings(newSettings);
-    };
+  const update = async (updates: Partial<GraceSettings>) => {
+    const newSettings = { ...settings, ...updates };
+    setSettings(newSettings);
+    await graceSessionService.updateGraceSettings(newSettings);
+  };
 
-    return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-                <ModernSelect 
-                    value={String(settings.default_duration_secs)}
-                    onChange={(val) => update({ default_duration_secs: parseInt(val) })}
-                    options={[
-                        { label: "Off", value: "0" },
-                        { label: "30s", value: "30" },
-                        { label: "5m", value: "300" },
-                        { label: "15m", value: "900" },
-                        { label: "60m", value: "3600" },
-                    ]}
-                />
-                <div className={styles.pillSwitch}>
-                    <button
-                        className={clsx(styles.pillSwitchBtn, settings.max_security_mode && styles.pillSwitchBtnActive)}
-                        onClick={() => update({ max_security_mode: true })}
-                        title="Maximum Security Mode"
-                    >
-                        MAX
-                    </button>
-                    <button
-                        className={clsx(styles.pillSwitchBtn, !settings.max_security_mode && styles.pillSwitchBtnActive)}
-                        onClick={() => update({ max_security_mode: false })}
-                    >
-                        STD
-                    </button>
-                </div>
-            </div>
-            {settings.max_security_mode && (
-                <span style={{ fontSize: '10px', color: 'var(--accent-color)', fontWeight: 'bold' }}>
-                    MAX SECURITY ACTIVE
-                </span>
-            )}
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', alignItems: 'flex-end' }}>
+      <div style={{ display: 'flex', gap: '0.75rem' }}>
+        <ModernSelect
+          value={String(settings.default_duration_secs)}
+          onChange={(val) => update({ default_duration_secs: parseInt(val) })}
+          options={[
+            { label: "Off", value: "0" },
+            { label: "30s", value: "30" },
+            { label: "5m", value: "300" },
+            { label: "15m", value: "900" },
+            { label: "60m", value: "3600" },
+          ]}
+        />
+        <div className={styles.pillSwitch}>
+          <button
+            className={clsx(styles.pillSwitchBtn, settings.max_security_mode && styles.pillSwitchBtnActive)}
+            onClick={() => update({ max_security_mode: true })}
+            title="Maximum Security Mode"
+          >
+            MAX
+          </button>
+          <button
+            className={clsx(styles.pillSwitchBtn, !settings.max_security_mode && styles.pillSwitchBtnActive)}
+            onClick={() => update({ max_security_mode: false })}
+          >
+            STD
+          </button>
         </div>
-    );
+      </div>
+      {settings.max_security_mode && (
+        <span style={{ fontSize: '10px', color: 'var(--accent-color)', fontWeight: 'bold' }}>
+          MAX SECURITY ACTIVE
+        </span>
+      )}
+    </div>
+  );
 };
 
 interface SecurityPolicyProps {
