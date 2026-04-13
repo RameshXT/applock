@@ -15,7 +15,7 @@ import {
   Monitor,
   Shield,
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import clsx from "clsx";
 import styles from "../styles/App.module.css";
 import logo from "../assets/logo.png";
@@ -97,6 +97,37 @@ export const Dashboard = ({
     setSelectionMode(false);
     setSelectedNames(new Set());
   };
+
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Escape: Reset Search or Exit Selection Mode
+      if (e.key === "Escape") {
+        if (selectionMode) {
+          setSelectionMode(false);
+          setSelectedNames(new Set());
+          return;
+        }
+        if (search) {
+          setSearch("");
+          return;
+        }
+      }
+
+      // Forward Slash: Focus SearchBar
+      if (e.key === "/" && document.activeElement !== searchInputRef.current) {
+        const isInput = document.activeElement instanceof HTMLInputElement || document.activeElement instanceof HTMLTextAreaElement;
+        if (!isInput) {
+          e.preventDefault();
+          searchInputRef.current?.focus();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectionMode, search, setSearch]);
 
   const appsToShow = useMemo(() => {
     const list = activeTab === "all" ? lockedApps : allApps;
@@ -195,6 +226,7 @@ export const Dashboard = ({
             <div className={styles.searchBar}>
               <Search size={16} color="var(--text-secondary)" />
               <input
+                ref={searchInputRef}
                 placeholder={`Search ${placeholder}|`}
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}

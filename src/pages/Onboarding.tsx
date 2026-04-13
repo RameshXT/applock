@@ -14,7 +14,7 @@ import {
 import styles from "../styles/Onboarding.module.css";
 import logo from "../assets/logo.png";
 import { AppConfig, AuthMode, InstalledApp, LockedApp } from "../types";
-import { setupPassword } from "../services/auth.service";
+import { setCredential } from "../services/credentialService";
 import { saveSelection } from "../services/apps.service";
 
 interface OnboardingProps {
@@ -37,6 +37,7 @@ interface PinInputProps {
   onFocused?: () => void;
   isFocused?: boolean;
   error?: boolean;
+  autoFocus?: boolean;
 }
 
 const PinInput = React.forwardRef<HTMLInputElement, PinInputProps>(({
@@ -48,7 +49,8 @@ const PinInput = React.forwardRef<HTMLInputElement, PinInputProps>(({
   onBackspaceEmpty,
   onFocused,
   isFocused,
-  error
+  error,
+  autoFocus
 }, ref) => {
   const internalRef = useRef<HTMLInputElement>(null);
   const inputRef = (ref as React.RefObject<HTMLInputElement>) || internalRef;
@@ -76,6 +78,7 @@ const PinInput = React.forwardRef<HTMLInputElement, PinInputProps>(({
         onFocus={onFocused}
         onKeyDown={handleKeyDown}
         autoComplete="off"
+        autoFocus={autoFocus}
         onChange={(e) => {
           const val = e.target.value.replace(/\D/g, '').slice(0, length);
           onChange(val);
@@ -172,19 +175,15 @@ export const Onboarding = ({
   useEffect(() => {
     if (step === 3) {
       const timer = setTimeout(() => {
-        if (securityType === "PIN") {
-          if (activePinField === 'master') {
-            inputRef.current?.focus();
-          } else {
-            confirmRef.current?.focus();
-          }
-        } else {
+        if (activePinField === 'master') {
           inputRef.current?.focus();
+        } else {
+          confirmRef.current?.focus();
         }
-      }, 100);
+      }, 150);
       return () => clearTimeout(timer);
     }
-  }, [step, activePinField, securityType]);
+  }, [step, activePinField, securityType, pinLength]);
 
   // Load detailed apps when reaching step 5
   useEffect(() => {
@@ -193,21 +192,22 @@ export const Onboarding = ({
     }
   }, [step, fetchDetailedApps]);
 
-  // Auto-advance PIN flow when confirmation matches
+  // Auto-advance PIN flow removed as per user request
+  // useEffect(() => { ... })
+
+  // Global Keyboard Shortcuts
   useEffect(() => {
-    if (
-      step === 3 && 
-      securityType === "PIN" && 
-      password.length === pinLength && 
-      confirmPassword === password &&
-      activePinField === 'confirm'
-    ) {
-      const timer = setTimeout(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
         handleNext();
-      }, 300);
-      return () => clearTimeout(timer);
-    }
-  }, [confirmPassword, password, pinLength, securityType, step, activePinField]);
+      } else if (e.key === "Escape") {
+        handleBack();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [step, securityType, password, confirmPassword, loading, isFinalizing, activePinField]);
 
   const handleNext = async () => {
     if (loading || isFinalizing) return;
@@ -232,9 +232,15 @@ export const Onboarding = ({
         setError(`PIN must be exactly ${pinLength} digits`);
         return;
       }
-      if (securityType === "Password" && password.length < 6) {
-        setError("Password must be at least 6 characters");
-        return;
+      if (securityType === "Password") {
+        if (password.length < 8) {
+          setError("Password must be at least 8 characters");
+          return;
+        }
+        if (!/[A-Z]/.test(password)) {
+          setError("Password must contain at least one uppercase letter");
+          return;
+        }
       }
     }
 
@@ -257,9 +263,10 @@ export const Onboarding = ({
   const finalizeOnboarding = async (isSkip = false) => {
     setLoading(true);
     try {
-      // 1. Setup Password/PIN
+      // 1. Setup Password/PIN (Using the new secure service)
       if (securityType) {
-        await setupPassword(password, securityType);
+        const credType = securityType === "PIN" ? (pinLength === 4 ? "pin_4" : "pin_6") : "alphanumeric";
+        await setCredential(password, credType);
       }
 
       // 2. Save Locked Apps
@@ -326,9 +333,16 @@ export const Onboarding = ({
 
   const getPasswordStrength = (pass: string) => {
     if (pass.length === 0) return { score: 0, text: "", color: "transparent" };
-    if (pass.length < 6) return { score: 1, text: "Weak", color: "#ef4444" };
-    if (pass.length < 10) return { score: 2, text: "Medium", color: "#f59e0b" };
-    return { score: 3, text: "Strong", color: "#22c55e" };
+    
+    let score = 0;
+    if (pass.length >= 8) score++;
+    if (/[A-Z]/.test(pass)) score++;
+    if (/[0-9]/.test(pass) || /[^A-Za-z0-9]/.test(pass)) score++;
+
+    if (score === 1) return { score: 1, text: "Weak", color: "#ff5c5c" };
+    if (score === 2) return { score: 2, text: "Medium", color: "#f59e0b" };
+    if (score === 3) return { score: 3, text: "Strong", color: "#22c55e" };
+    return { score: 0, text: "Invalid", color: "#ff5c5c" };
   };
 
   const strength = getPasswordStrength(password);
@@ -471,7 +485,7 @@ export const Onboarding = ({
                     onClick={handleNext}
                     disabled={!securityType}
                   >
-                    <span>Continue</span>
+                    <span>Set {securityType === "Password" ? "Password" : "PIN"}</span>
                   </button>
                 </div>
               </>
@@ -511,6 +525,7 @@ export const Onboarding = ({
                     <label>Master {securityType || "Security"}</label>
                     {securityType === "PIN" ? (
                       <PinInput
+                        autoFocus
                         ref={inputRef}
                         value={password}
                         onChange={(v) => { setPassword(v); setError(null); }}
@@ -528,12 +543,16 @@ export const Onboarding = ({
                           type={showPassword ? "text" : "password"}
                           placeholder={`Enter ${securityType || "Security"}...`}
                           value={password}
+                          autoFocus
                           onChange={(e) => { setPassword(e.target.value); setError(null); }}
-                          onKeyDown={(e) => e.key === "Enter" && confirmRef.current?.focus()}
+                          onFocus={() => setActivePinField('master')}
+                          onKeyDown={(e) => e.key === "Enter" && setActivePinField('confirm')}
                         />
                         <button
                           className={styles.inputIcon}
                           onClick={() => setShowPassword(!showPassword)}
+                          type="button"
+                          tabIndex={-1}
                         >
                           {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                         </button>
@@ -582,6 +601,7 @@ export const Onboarding = ({
                           placeholder={`Confirm ${securityType || "Security"}...`}
                           value={confirmPassword}
                           onChange={(e) => { setConfirmPassword(e.target.value); setError(null); }}
+                          onFocus={() => setActivePinField('confirm')}
                           onKeyDown={(e) => e.key === "Enter" && handleNext()}
                         />
                         <div className={styles.inputIcon}>
@@ -616,10 +636,11 @@ export const Onboarding = ({
                       loading ||
                       !password ||
                       password !== confirmPassword ||
-                      (securityType === "PIN" && password.length !== pinLength)
+                      (securityType === "PIN" && password.length !== pinLength) ||
+                      (securityType === "Password" && (password.length < 8 || !/[A-Z]/.test(password)))
                     }
                   >
-                    <span>{loading ? "Securing..." : "Secure My App"}</span>
+                    <span>{loading ? "Processing..." : "Continue"}</span>
                   </button>
                 </div>
               </>

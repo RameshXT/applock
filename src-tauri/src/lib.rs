@@ -3,6 +3,7 @@ pub mod services;
 pub mod commands;
 pub mod utils;
 pub mod setup;
+pub mod credential_manager;
 
 use std::sync::{Arc, Mutex};
 use std::fs;
@@ -44,6 +45,9 @@ pub fn run() {
             setup::shortcut::register_shortcuts(app, state.clone())?;
             setup::tray::setup_tray(app, state.clone())?;
             setup::window::setup_window(app, state.clone())?;
+
+            // Initialize rehash status check on boot
+            credential_manager::initialize_rehash_status(&app.handle());
 
             // Start the app monitor background task
             let app_handle = app.handle().clone();
@@ -106,6 +110,12 @@ pub fn run() {
             // System domain
             commands::system::get_blocked_app,
             commands::system::release_app,
+            // Credential domain
+            commands::credentials::set_credential,
+            commands::credentials::verify_credential,
+            commands::credentials::update_credential,
+            commands::credentials::get_credential_type,
+            commands::credentials::check_rehash_needed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

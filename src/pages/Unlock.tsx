@@ -31,6 +31,16 @@ export const Unlock = ({
   handleUnlock,
   onCancel,
 }: UnlockProps) => {
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onCancel) {
+        onCancel();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onCancel]);
+
   return (
     <motion.div
       key={isVerify ? "verify" : "unlock"}
