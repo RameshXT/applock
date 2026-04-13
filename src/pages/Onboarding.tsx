@@ -13,9 +13,9 @@ import {
 } from "lucide-react";
 import styles from "../styles/Onboarding.module.css";
 import logo from "../assets/logo.png";
-import { AppConfig, AuthMode, InstalledApp, LockedApp } from "../types";
-import { setCredential } from "../services/credentialService";
-import { saveSelection } from "../services/apps.service";
+import { AppConfig, AuthMode, InstalledApp } from "../types";
+import { FinalizeProgressUI } from "../components/onboarding/FinalizeProgressUI";
+import { OnboardingPayload, CredentialType } from "../services/onboardingFinalizerService";
 
 interface OnboardingProps {
   appName: string;
@@ -139,7 +139,6 @@ export const Onboarding = ({
   config,
   allApps,
   onComplete,
-  updateConfig,
   fetchDetailedApps,
   isScanning
 }: OnboardingProps) => {
@@ -165,8 +164,7 @@ export const Onboarding = ({
 
   // UI State
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [isFinalizing, setIsFinalizing] = useState(false);
+  const [showFinalize, setShowFinalize] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const confirmRef = useRef<HTMLInputElement>(null);
@@ -207,10 +205,10 @@ export const Onboarding = ({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [step, securityType, password, confirmPassword, loading, isFinalizing, activePinField]);
+  }, [step, securityType, password, confirmPassword, showFinalize, activePinField]);
 
   const handleNext = async () => {
-    if (loading || isFinalizing) return;
+    if (showFinalize) return;
     setError(null);
 
     // Validation per step
@@ -245,10 +243,8 @@ export const Onboarding = ({
     }
 
     if (step === 5) {
-      setIsFinalizing(true);
-      const success = await finalizeOnboarding();
-      setIsFinalizing(false);
-      if (!success) return;
+      setShowFinalize(true);
+      return;
     }
 
     if (step === 6) {
@@ -260,61 +256,36 @@ export const Onboarding = ({
     setStep(s => s + 1);
   };
 
-  const finalizeOnboarding = async (isSkip = false) => {
-    setLoading(true);
-    try {
-      // 1. Setup Password/PIN (Using the new secure service)
-      if (securityType) {
-        const credType = securityType === "PIN" ? (pinLength === 4 ? "pin_4" : "pin_6") : "alphanumeric";
-        await setCredential(password, credType);
-      }
-
-      // 2. Save Locked Apps
-      if (!isSkip) {
-        const appsToLock: LockedApp[] = allApps
-          .filter(app => app.path && selectedApps.includes(app.path))
-          .map(app => ({
-            id: Math.random().toString(36).substring(2, 9),
-            name: app.name,
-            exec_name: app.path || "",
-            icon: app.icon
-          }));
-
-        if (appsToLock.length > 0) {
-          await saveSelection(appsToLock);
-        }
-      }
-
-      // 3. Update Preferences and Mark Complete
-      await updateConfig({
-        autostart: preferences.autostart,
-        minimize_to_tray: preferences.minimize_to_tray,
-        strict_enforcement: preferences.lock_applock,
-        onboarding_completed: true
-      });
-      return true;
-    } catch (err) {
-      console.error("Onboarding finalization failed:", err);
-      setError("Failed to save configuration. Please try again.");
-      return false;
-    } finally {
-      setLoading(false);
+  const buildPayload = (): OnboardingPayload => ({
+    raw_credential: password,
+    cred_type: securityType === "PIN" ? CredentialType.PIN : CredentialType.Password,
+    locked_apps: allApps
+      .filter(app => app.path && selectedApps.includes(app.path))
+      .map(app => ({
+        app_id: Math.random().toString(36).substring(2, 9),
+        exe_path: app.path || "",
+        display_name: app.name
+      })),
+    settings: {
+      autostart_enabled: preferences.autostart,
+      minimize_to_tray: preferences.minimize_to_tray,
+      dashboard_lock_enabled: preferences.lock_applock,
+      app_grace_secs: 15,
+      dashboard_grace_secs: 300,
+      max_failed_attempts: 3,
+      theme: "dark",
+      notify_on_lock: true,
+      notify_on_unlock: true,
+      notify_on_fail: true,
     }
-  };
+  });
 
-  const handleSkip = async () => {
-    if (loading || isFinalizing) return;
-    setIsFinalizing(true);
-    const success = await finalizeOnboarding(true);
-    if (success) {
-      setDirection(1);
-      setStep(6);
-    }
-    setIsFinalizing(false);
+  const handleSkip = () => {
+    setShowFinalize(true);
   };
 
   const handleBack = () => {
-    if (loading || isFinalizing) return;
+    if (showFinalize) return;
     setError(null);
     
     if (step === 3 && activePinField === 'confirm') {
@@ -379,6 +350,17 @@ export const Onboarding = ({
 
   return (
     <div className={styles.container}>
+      {showFinalize && (
+        <FinalizeProgressUI 
+          payload={buildPayload()}
+          onSuccess={() => {
+            setShowFinalize(false);
+            setDirection(1);
+            setStep(6);
+          }}
+          onCancel={() => setShowFinalize(false)}
+        />
+      )}
       {/* Progress Bar */}
       <div className={styles.progressBarContainer}>
         <motion.div
@@ -398,7 +380,7 @@ export const Onboarding = ({
             exit={{ opacity: 0, x: -20 }}
             className={styles.backBtn}
             onClick={handleBack}
-            disabled={loading || isFinalizing}
+            disabled={showFinalize}
           >
             <ArrowLeft size={18} />
             <span>Back</span>
@@ -633,14 +615,13 @@ export const Onboarding = ({
                     className={styles.nextBtn}
                     onClick={handleNext}
                     disabled={
-                      loading ||
                       !password ||
                       password !== confirmPassword ||
                       (securityType === "PIN" && password.length !== pinLength) ||
                       (securityType === "Password" && (password.length < 8 || !/[A-Z]/.test(password)))
                     }
                   >
-                    <span>{loading ? "Processing..." : "Continue"}</span>
+                    <span>Continue</span>
                   </button>
                 </div>
               </>
@@ -748,11 +729,11 @@ export const Onboarding = ({
                   <button
                     className={styles.nextBtn}
                     onClick={handleNext}
-                    disabled={selectedApps.length === 0 || loading}
+                    disabled={selectedApps.length === 0 || showFinalize}
                   >
-                    <span>{loading ? "Saving..." : `Lock ${selectedApps.length} Apps`}</span>
+                    <span>{showFinalize ? "Saving..." : `Lock ${selectedApps.length} Apps`}</span>
                   </button>
-                  <button className={styles.skipBtn} onClick={handleSkip} disabled={loading}>
+                  <button className={styles.skipBtn} onClick={handleSkip} disabled={showFinalize}>
                     Skip for now
                   </button>
                 </div>

@@ -25,6 +25,7 @@ pub mod input_blocker;
 pub mod process_guard;
 pub mod fullscreen_handler;
 pub mod settings_manager;
+pub mod onboarding_finalizer;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
@@ -218,6 +219,8 @@ pub fn run() {
             settings_manager::get_settings_change_log,
             settings_manager::export_settings,
             settings_manager::import_settings,
+            // Onboarding domain
+            onboarding_finalizer::finalize_onboarding,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

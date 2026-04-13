@@ -115,6 +115,7 @@ dependencies = [
  "notify",
  "ntapi",
  "parsy",
+ "password-hash",
  "rand 0.8.5",
  "rayon",
  "serde",
