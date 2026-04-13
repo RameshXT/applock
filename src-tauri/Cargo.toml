@@ -71,5 +71,6 @@ hex = "0.4"
 rayon = "1.8"
 notify = "6.1"
 parsy = "0.1" # Using parsy for LNK parsing fallback or similar if needed, else windows crate is enough.
+tauri-plugin-autostart = "2"
 # Let's keep it simple.
 

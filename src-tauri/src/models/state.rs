@@ -23,5 +23,6 @@ pub struct AppState {
     pub debounce_state: Mutex<DebounceState>,
     pub window_snapshots: Arc<RwLock<HashMap<isize, WindowSnapshot>>>,
     pub keyboard_hook: Arc<Mutex<Option<SendHhook>>>,
+    pub settings_log: Mutex<Vec<serde_json::Value>>,
+    pub session_token: Mutex<Option<String>>,
 }
-

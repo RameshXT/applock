@@ -24,6 +24,7 @@ pub mod overlay_manager;
 pub mod input_blocker;
 pub mod process_guard;
 pub mod fullscreen_handler;
+pub mod settings_manager;
 
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock};
@@ -44,6 +45,7 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, Some(vec!["--start-minimized"])))
         .setup(|app| {
             let config_path = app.path().app_config_dir()?;
             fs::create_dir_all(&config_path)?;
@@ -65,6 +67,8 @@ pub fn run() {
                 debounce_state: Mutex::new(rate_limiter::DebounceState::default()),
                 window_snapshots: Arc::new(RwLock::new(HashMap::new())),
                 keyboard_hook: Arc::new(Mutex::new(None)),
+                settings_log: Mutex::new(Vec::new()),
+                session_token: Mutex::new(None),
             });
 
             let session_manager = Arc::new(LockSessionManager::new());
@@ -201,6 +205,19 @@ pub fn run() {
             window_manager::restore_locked_window,
             window_manager::install_hook,
             window_manager::uninstall_hook,
+
+            // Settings Management domain
+            settings_manager::set_autostart,
+            settings_manager::set_minimize_to_tray,
+            settings_manager::set_dashboard_lock,
+            settings_manager::set_grace_duration,
+            settings_manager::set_cooldown_tiers,
+            settings_manager::set_max_failed_attempts,
+            settings_manager::set_notification_prefs,
+            settings_manager::set_theme,
+            settings_manager::get_settings_change_log,
+            settings_manager::export_settings,
+            settings_manager::import_settings,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

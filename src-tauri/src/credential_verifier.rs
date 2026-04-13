@@ -16,6 +16,7 @@ const LOCKOUT_FILE: &str = "lockout.enc";
 #[derive(Debug, Serialize, Deserialize)]
 pub struct VerifyResult {
     pub success: bool,
+    pub token: Option<String>,
 }
 
 /// Status of the lockout state, for UI purposes.
@@ -146,6 +147,12 @@ pub async fn verify_credential(
     });
 
     if success {
+        let token = uuid::Uuid::new_v4().to_string();
+        {
+            let mut s_token = state.session_token.lock().unwrap();
+            *s_token = Some(token.clone());
+        }
+        
         if let Some(id) = &app_id {
             let app_name = {
                 let config = state.config.lock().unwrap();
@@ -161,7 +168,7 @@ pub async fn verify_credential(
                 let _ = crate::grace_manager::start_grace_session(&id_clone, &app_name, handle).await;
             });
         }
-        Ok(VerifyResult { success: true })
+        Ok(VerifyResult { success: true, token: Some(token) })
     } else {
         // Requirement 46: generic error string
         Err("Verification failed".to_string())
