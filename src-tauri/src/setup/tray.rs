@@ -6,7 +6,9 @@ use crate::models::AppState;
 pub fn setup_tray(app: &mut App, _state: Arc<AppState>) -> Result<(), Box<dyn std::error::Error>> {
     let quit_i = tauri::menu::MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let show_i = tauri::menu::MenuItem::with_id(app, "show", "Show App", true, None::<&str>)?;
-    let menu = tauri::menu::Menu::with_items(app, &[&show_i, &quit_i])?;
+    let pause_i = tauri::menu::MenuItem::with_id(app, "pause", "Pause Watcher", true, None::<&str>)?;
+    let resume_i = tauri::menu::MenuItem::with_id(app, "resume", "Resume Watcher", true, None::<&str>)?;
+    let menu = tauri::menu::Menu::with_items(app, &[&show_i, &tauri::menu::PredefinedMenuItem::separator(app)?, &pause_i, &resume_i, &tauri::menu::PredefinedMenuItem::separator(app)?, &quit_i])?;
 
     tauri::tray::TrayIconBuilder::with_id("tray")
         .icon(app.default_window_icon().unwrap().clone())
@@ -20,6 +22,18 @@ pub fn setup_tray(app: &mut App, _state: Arc<AppState>) -> Result<(), Box<dyn st
                         let _ = window.unminimize();
                         let _ = window.set_focus();
                     }
+                }
+                "pause" => {
+                    let manager = app.state::<Arc<crate::lock_session::LockSessionManager>>();
+                    let mut state = manager.watcher_state.write().unwrap();
+                    *state = crate::lock_session::WatcherState::Paused;
+                    println!("Watcher paused from tray");
+                }
+                "resume" => {
+                    let manager = app.state::<Arc<crate::lock_session::LockSessionManager>>();
+                    let mut state = manager.watcher_state.write().unwrap();
+                    *state = crate::lock_session::WatcherState::Running;
+                    println!("Watcher resumed from tray");
                 }
                 _ => {}
             }

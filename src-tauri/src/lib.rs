@@ -9,13 +9,20 @@ pub mod secure_storage;
 pub mod app_scanner;
 pub mod icon_extractor;
 pub mod file_watcher;
+pub mod lock_session;
+pub mod process_watcher;
+pub mod window_manager;
+pub mod uwp_handler;
+pub mod watcher_supervisor;
 
 use std::sync::{Arc, Mutex};
 use std::fs;
 use tauri::Manager;
 use crate::models::AppState;
 use crate::utils::config::load_config;
-use crate::services::monitor::start_monitor;
+use crate::lock_session::LockSessionManager;
+use crate::process_watcher::ProcessWatcher;
+use crate::watcher_supervisor::WatcherSupervisor;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -44,6 +51,9 @@ pub fn run() {
                 was_maximized: Mutex::new(true),
             });
 
+            let session_manager = Arc::new(LockSessionManager::new());
+            app.manage(session_manager.clone());
+
             app.manage(state.clone());
 
             // Delegate setup to dedicated modules
@@ -54,10 +64,19 @@ pub fn run() {
             // Initialize rehash status check on boot
             credential_manager::initialize_rehash_status(&app.handle());
 
-            // Start the app monitor background task
-            let app_handle = app.handle().clone();
+            // Start the App Lock Engine background tasks
+            let watcher_app_handle = app.handle().clone();
+            let watcher_session_manager = session_manager.clone();
             tauri::async_runtime::spawn(async move {
-                start_monitor(app_handle, state).await;
+               let watcher = ProcessWatcher::new(watcher_app_handle, watcher_session_manager.clone());
+               watcher.start_polling().await;
+            });
+
+            let supervisor_app_handle = app.handle().clone();
+            let supervisor_session_manager = session_manager.clone();
+            tauri::async_runtime::spawn(async move {
+                let supervisor = WatcherSupervisor::new(supervisor_app_handle, supervisor_session_manager);
+                supervisor.run().await;
             });
 
             Ok(())
@@ -131,6 +150,15 @@ pub fn run() {
             commands::scanner::refresh_scan,
             commands::scanner::start_file_watcher,
             commands::scanner::stop_file_watcher,
+            // Watcher domain
+            commands::watcher::start_watcher,
+            commands::watcher::stop_watcher,
+            commands::watcher::pause_watcher,
+            commands::watcher::resume_watcher,
+            commands::watcher::get_watcher_state,
+            commands::watcher::get_active_lock_sessions,
+            commands::watcher::unlock_app,
+            commands::watcher::add_portable_app,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
