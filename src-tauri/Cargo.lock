@@ -108,6 +108,7 @@ dependencies = [
  "argon2",
  "base64 0.21.7",
  "chrono",
+ "hex",
  "image",
  "lazy_static",
  "machine-uid",

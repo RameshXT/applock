@@ -4,6 +4,8 @@ pub mod commands;
 pub mod utils;
 pub mod setup;
 pub mod credential_manager;
+pub mod crypto;
+pub mod secure_storage;
 
 use std::sync::{Arc, Mutex};
 use std::fs;
@@ -116,6 +118,9 @@ pub fn run() {
             commands::credentials::update_credential,
             commands::credentials::get_credential_type,
             commands::credentials::check_rehash_needed,
+            // Storage domain
+            commands::storage::verify_storage_integrity,
+            commands::storage::get_storage_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
