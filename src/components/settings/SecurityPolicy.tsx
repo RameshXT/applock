@@ -152,47 +152,6 @@ export const SecurityPolicy: React.FC<SecurityPolicyProps> = ({
 
       <div className={styles.settingRow}>
         <div className={styles.settingLabel}>
-          <span>Advanced Protection</span>
-          <span>Enhanced monitoring and persistence guard.</span>
-        </div>
-        <div className={styles.settingControl}>
-          <div className={styles.pillSwitch}>
-            <button
-              className={clsx(
-                styles.pillSwitchBtn,
-                (config.strict_enforcement || config.protection_persistence) &&
-                styles.pillSwitchBtnActive
-              )}
-              onClick={() =>
-                updateConfig({
-                  strict_enforcement: true,
-                  protection_persistence: true,
-                })
-              }
-            >
-              ON
-            </button>
-            <button
-              className={clsx(
-                styles.pillSwitchBtn,
-                !(config.strict_enforcement || config.protection_persistence) &&
-                styles.pillSwitchBtnActive
-              )}
-              onClick={() =>
-                updateConfig({
-                  strict_enforcement: false,
-                  protection_persistence: false,
-                })
-              }
-            >
-              OFF
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.settingLabel}>
           <span>Safety Lockout</span>
           <span>Configures automatic cooldown after failed attempts.</span>
         </div>

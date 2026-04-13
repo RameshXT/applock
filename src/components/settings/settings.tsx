@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "../../styles/App.module.css";
 import clsx from "clsx";
-import { User, ShieldCheck, Monitor, RotateCcw, Star, Settings } from "lucide-react";
+import { User, ShieldCheck, Monitor, RotateCcw, Star } from "lucide-react";
 import { GithubIcon } from "../GithubIcon";
 import { AppConfig, AuthMode } from "../../types";
 import { AccountSetup } from "./AccountSetup";
@@ -9,8 +9,6 @@ import { SecurityPolicy } from "./SecurityPolicy";
 import { SystemStyle } from "./SystemStyle";
 import { Contribution } from "./Contribution";
 import { Credits } from "./Credits";
-// Advanced configuration and backup management
-import AdvancedBackup from "./AdvancedBackup";
 
 interface SettingsPageProps {
   appName: string;
@@ -70,15 +68,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <button
           className={clsx(
             styles.settingsNavBtn,
-            settingsTab === "advanced" && styles.settingsNavBtnActive
-          )}
-          onClick={() => setSettingsTab("advanced")}
-        >
-          <Settings size={18} /> Advanced & Backup
-        </button>
-        <button
-          className={clsx(
-            styles.settingsNavBtn,
             settingsTab === "contribution" && styles.settingsNavBtnActive
           )}
           onClick={() => setSettingsTab("contribution")}
@@ -132,12 +121,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           />
         )}
 
-        {settingsTab === "advanced" && (
-          <AdvancedBackup
-            config={config}
-            updateConfig={updateConfig}
-          />
-        )}
 
         {settingsTab === "contribution" && <Contribution appName={appName} />}
 

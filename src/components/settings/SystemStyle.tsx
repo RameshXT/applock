@@ -84,38 +84,6 @@ export const SystemStyle: React.FC<SystemStyleProps> = ({
 
       <div className={styles.settingRow}>
         <div className={styles.settingLabel}>
-          <span>Experience Quality</span>
-          <span>Optimize responsiveness and interaction feel.</span>
-        </div>
-        <div className={styles.settingControl}>
-          <div className={styles.pillSwitch}>
-            <button
-              className={clsx(
-                styles.pillSwitchBtn,
-                (config.animations_intensity === "high" ||
-                  !config.animations_intensity) &&
-                styles.pillSwitchBtnActive
-              )}
-              onClick={() => updateConfig({ animations_intensity: "high" })}
-            >
-              High
-            </button>
-            <button
-              className={clsx(
-                styles.pillSwitchBtn,
-                config.animations_intensity === "low" &&
-                styles.pillSwitchBtnActive
-              )}
-              onClick={() => updateConfig({ animations_intensity: "low" })}
-            >
-              Low
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.settingLabel}>
           <span>Automated Triggers</span>
           <span>Automate security triggers based on system state.</span>
         </div>

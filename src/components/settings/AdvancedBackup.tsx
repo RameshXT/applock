@@ -123,31 +123,7 @@ const AdvancedBackup: React.FC<AdvancedSettingsProps> = ({ config, updateConfig 
       {!showAuth && (
         <div className={styles.settingsGrid}>
           <div className={styles.settingsMainCol}>
-              <AutoStartToggle 
-                enabled={config.autostart || false} 
-                onToggle={(val) => settingsService.setAutostart(val).then(() => updateConfig({ autostart: val }))} 
-              />
-              <TrayBehaviorToggle 
-                enabled={config.minimize_to_tray || false} 
-                onToggle={(val) => settingsService.setMinimizeToTray(val).then(() => updateConfig({ minimize_to_tray: val }))} 
-              />
               <ThemeSelector theme={theme} onChange={(val) => settingsService.setTheme(val).then(() => setTheme(val))} />
-              <MaxAttemptsInput 
-                max={maxAttempts} 
-                onChange={(val) => handleProtectedAction((t) => settingsService.setMaxFailedAttempts(val, t).then(() => setMaxAttempts(val)))} 
-              />
-              <GracePeriodSlider 
-                appGrace={appGrace} 
-                dashGrace={dashGrace} 
-                onChange={(target, val) => handleProtectedAction((t) => settingsService.setGraceDuration(target, val, t).then(() => {
-                    if (target === "app") {
-                        setAppGrace(val);
-                        updateConfig({ grace_period: val });
-                    } else {
-                        setDashGrace(val);
-                    }
-                }))} 
-              />
               <CooldownTierEditor 
                 tiers={tiers} 
                 onSave={(newTiers) => handleProtectedAction((t) => settingsService.setCooldownTiers(newTiers, t).then(() => setTiers(newTiers)))} 

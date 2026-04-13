@@ -31,23 +31,6 @@ export const AccountSetup: React.FC<AccountSetupProps> = ({
 
       <div className={styles.settingRow}>
         <div className={styles.settingLabel}>
-          <span>Display Identity</span>
-          <span>Your public name shown on the lock screen.</span>
-        </div>
-        <div className={styles.settingControl}>
-          <input
-            type="text"
-            className={styles.settingsInput}
-            style={{ maxWidth: "220px" }}
-            placeholder="Display Name"
-            value={config.display_name || ""}
-            onChange={(e) => updateConfig({ display_name: e.target.value })}
-          />
-        </div>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.settingLabel}>
           <span>Authentication Mode</span>
           <span>Choose between a numeric PIN or a text password.</span>
         </div>
@@ -159,35 +142,6 @@ export const AccountSetup: React.FC<AccountSetupProps> = ({
               OFF
             </button>
           </div>
-        </div>
-      </div>
-
-      <div className={styles.settingRow}>
-        <div className={styles.settingLabel}>
-          <span>
-            Data & Portability{" "}
-            <span className={styles.comingSoonBadge}>Coming Soon</span>
-          </span>
-          <span>Export or import your entire configuration.</span>
-        </div>
-        <div
-          className={styles.settingControl}
-          style={{ display: "flex", gap: "0.75rem", opacity: 0.5 }}
-        >
-          <button
-            className={styles.iconBtn}
-            disabled
-            style={{ cursor: "not-allowed" }}
-          >
-            Export Config
-          </button>
-          <button
-            className={styles.iconBtn}
-            disabled
-            style={{ cursor: "not-allowed" }}
-          >
-            Import Config
-          </button>
         </div>
       </div>
 
