@@ -176,8 +176,10 @@ fn get_appx_display_name(install_location: &str, package_name: &str) -> String {
             "(Get-AppxPackage -Name \"{}\" | Get-AppxPackageManifest).Package.Properties.DisplayName", 
             package_name
         );
+        const CREATE_NO_WINDOW: u32 = 0x08000000;
         let output = std::process::Command::new("powershell")
             .args(["-NoProfile", "-NonInteractive", "-Command", &ps_cmd])
+            .creation_flags(CREATE_NO_WINDOW)
             .output();
 
         if let Ok(out) = output {

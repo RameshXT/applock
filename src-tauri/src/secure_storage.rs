@@ -64,11 +64,13 @@ fn resolve_path(app_handle: &AppHandle, filename: &str) -> Result<PathBuf, Stora
 pub fn harden_file_permissions(path: &Path) -> Result<(), StorageError> {
     #[cfg(target_os = "windows")]
     {
+        use std::os::windows::process::CommandExt;
         let status = Command::new("icacls")
             .arg(path)
             .arg("/inheritance:r")
             .arg("/grant:r")
             .arg(format!("{}:F", std::env::var("USERNAME").unwrap_or_else(|_| "Users".to_string())))
+            .creation_flags(0x08000000) // CREATE_NO_WINDOW
             .status()
             .map_err(|e| StorageError::PermissionDenied(e.to_string()))?;
 
