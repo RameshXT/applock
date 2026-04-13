@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { InstalledApp, LockedApp, Tab } from "../types";
-import { getDetailedApps, saveSelection } from "../services/apps.service";
+import { getDetailedApps, getSystemApps, saveSelection } from "../services/apps.service";
 
 interface UseAppsResult {
   lockedApps: LockedApp[];
@@ -34,17 +34,39 @@ export function useApps(
     null
   );
 
-  const fetchDetailedApps = async () => {
+  const fetchDetailedApps = useCallback(async () => {
     try {
       setIsScanning(true);
-      const apps = await getDetailedApps();
+      let apps = await getDetailedApps();
+      
+      if (apps.length === 0) {
+        console.warn("Detailed scanner returned no apps, falling back to basic scanner");
+        const fallback = await getSystemApps();
+        // Map basic apps to detailed interface
+        apps = fallback.map(app => ({
+          name: app.name,
+          path: app.path || "",
+          icon: app.icon || "",
+          publisher: "System App",
+          version: "Unknown",
+          install_date: "",
+          size_kb: 0
+        } as any));
+      }
+      
       setAllApps(apps);
     } catch (err) {
-      console.error("Failed to fetch apps:", err);
+      console.error("Failed to fetch apps (detailed), trying basic:", err);
+      try {
+        const fallbackApps = await getSystemApps();
+        setAllApps(fallbackApps as any);
+      } catch (fallbackErr) {
+        console.error("Fallback scan also failed:", fallbackErr);
+      }
     } finally {
       setIsScanning(false);
     }
-  };
+  }, []);
 
   const toggleApp = async (app: LockedApp | InstalledApp, fromTab?: Tab) => {
     let snapshot: LockedApp[] = [];

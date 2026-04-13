@@ -47,4 +47,5 @@ export interface AppConfig {
   biometrics_enabled?: boolean;
   last_credential_change?: number;
   recovery_key?: string;
+  onboarding_completed?: boolean;
 }

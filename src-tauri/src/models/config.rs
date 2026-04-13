@@ -41,6 +41,7 @@ pub struct AppConfig {
     pub biometrics_enabled: Option<bool>,
     pub last_credential_change: Option<u64>,
     pub recovery_key: Option<String>,
+    pub onboarding_completed: Option<bool>,
 }
 
 impl Default for AppConfig {
@@ -71,6 +72,7 @@ impl Default for AppConfig {
             biometrics_enabled: Some(false),
             last_credential_change: None,
             recovery_key: None,
+            onboarding_completed: Some(false),
         }
     }
 }

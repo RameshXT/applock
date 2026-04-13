@@ -4,7 +4,6 @@ import { getConfig, checkSetup, getIsUnlocked } from "../services/auth.service";
 import { getLockedApps } from "../services/apps.service";
 import { getBlockedApp } from "../services/system.service";
 import { listen } from "@tauri-apps/api/event";
-import { STORAGE_KEYS, RESTORABLE_VIEWS } from "../constants";
 
 interface AppInitOptions {
   setConfig: (cfg: AppConfig) => void;
@@ -26,12 +25,8 @@ interface AppInitResult {
 
 export function useAppInit(options: AppInitOptions): AppInitResult {
   const [blockedApp, setBlockedApp] = useState<LockedApp | null>(null);
-  const [activeTab, setActiveTab] = useState<Tab>(
-    () => (localStorage.getItem(STORAGE_KEYS.TAB) as Tab) || "home"
-  );
-  const [settingsTab, setSettingsTab] = useState(
-    () => localStorage.getItem(STORAGE_KEYS.SETTINGS_TAB) || "account"
-  );
+  const [activeTab, setActiveTab] = useState<Tab>("home");
+  const [settingsTab, setSettingsTab] = useState("account");
 
   useEffect(() => {
     const init = async () => {
@@ -65,21 +60,7 @@ export function useAppInit(options: AppInitOptions): AppInitResult {
 
         const isUnlocked = await getIsUnlocked();
         if (isUnlocked) {
-          const persistedView = localStorage.getItem(STORAGE_KEYS.VIEW) as View;
-          if (
-            persistedView &&
-            (RESTORABLE_VIEWS as readonly string[]).includes(persistedView)
-          ) {
-            options.onSetView(persistedView);
-          } else {
-            options.onSetView("dashboard");
-          }
-          const persistedTab = localStorage.getItem(STORAGE_KEYS.TAB) as Tab;
-          const persistedSettingsTab = localStorage.getItem(
-            STORAGE_KEYS.SETTINGS_TAB
-          );
-          if (persistedTab) setActiveTab(persistedTab);
-          if (persistedSettingsTab) setSettingsTab(persistedSettingsTab);
+          options.onSetView("dashboard");
         } else {
           options.onSetView("unlock");
         }

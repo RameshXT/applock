@@ -12,3 +12,7 @@ export async function getLockedApps(): Promise<LockedApp[]> {
 export async function saveSelection(apps: LockedApp[]): Promise<void> {
   return invoke("save_selection", { apps });
 }
+
+export async function getSystemApps(): Promise<InstalledApp[]> {
+  return invoke<InstalledApp[]>("get_system_apps");
+}

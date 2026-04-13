@@ -1,10 +1,10 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import styles from "./styles/App.module.css";
 import clsx from "clsx";
 
 import { View } from "./types";
-import { APP_NAME, STORAGE_KEYS } from "./constants";
+import { APP_NAME } from "./constants";
 
 import {
   useAppInit,
@@ -101,19 +101,7 @@ function App() {
     gatekeeperInputRef,
   });
 
-  useEffect(() => {
-    if (
-      view &&
-      view !== "onboarding" &&
-      view !== "unlock" &&
-      view !== "gatekeeper"
-    ) {
-      localStorage.setItem(STORAGE_KEYS.VIEW, view);
-    }
-    if (activeTab) localStorage.setItem(STORAGE_KEYS.TAB, activeTab);
-    if (settingsTab)
-      localStorage.setItem(STORAGE_KEYS.SETTINGS_TAB, settingsTab);
-  }, [view, activeTab, settingsTab]);
+  // Removed UI state persistence logic to ensure a clean, stateless launch every time.
 
   if (view === null) return null;
 
@@ -137,7 +125,17 @@ function App() {
 
       <AnimatePresence mode="wait">
         {view === "onboarding" && (
-          <Onboarding appName={APP_NAME} onContinue={() => setView("setup")} />
+          <Onboarding
+            appName={APP_NAME}
+            config={config}
+            allApps={allApps}
+            onComplete={() => {
+              setView("dashboard");
+            }}
+            updateConfig={updateConfig}
+            fetchDetailedApps={fetchDetailedApps}
+            isScanning={isScanning}
+          />
         )}
 
         {view === "setup" && (

@@ -1,3 +1,4 @@
+use std::os::windows::process::CommandExt;
 use serde::Serialize;
 use winreg::enums::*;
 use winreg::RegKey;
@@ -26,11 +27,12 @@ const SKIP_PREFIXES: &[&str] = &[
 #[derive(Serialize, Clone, Debug)]
 pub struct DetailedApp {
     pub name: String,
+    pub path: String,
     pub publisher: String,
     pub version: String,
     pub install_date: String,
     pub size_kb: u64,
-    pub icon_base64: String,
+    pub icon: String,
 }
 
 /// Core scanner logic — called by the `get_detailed_apps` command in `commands/apps.rs`.
@@ -94,31 +96,24 @@ pub async fn get_detailed_apps_inner() -> Result<Vec<DetailedApp>, String> {
                     seen_names.insert(display_name.clone());
                     apps.push(DetailedApp {
                         name: display_name,
+                        path: install_location,
                         publisher,
                         version,
                         install_date,
                         size_kb: size_kb as u64,
-                        icon_base64,
+                        icon: icon_base64,
                     });
                 }
             }
         }
     }
 
-    let ps_cmd = r#"Get-AppxPackage | Where-Object { $_.SignatureKind -eq 'Store' -or $_.SignatureKind -eq 'Developer' } | ForEach-Object {
-        $m = $_ | Get-AppxPackageManifest;
-        $dn = $m.Package.Properties.DisplayName;
-        [PSCustomObject]@{
-            Name = $_.Name;
-            DisplayName = $dn;
-            Publisher = $_.Publisher;
-            Version = $_.Version;
-            InstallLocation = $_.InstallLocation;
-        }
-    } | ConvertTo-Json -Compress"#;
+    let ps_cmd = r#"Get-AppxPackage | Where-Object { $_.IsFramework -eq $false } | Select-Object Name, Publisher, Version, InstallLocation | ConvertTo-Json -Compress"#;
 
+    const CREATE_NO_WINDOW: u32 = 0x08000000;
     let ps_output = std::process::Command::new("powershell")
         .args(["-NoProfile", "-NonInteractive", "-Command", ps_cmd])
+        .creation_flags(CREATE_NO_WINDOW)
         .output();
 
     if let Ok(output) = ps_output {
@@ -167,11 +162,12 @@ pub async fn get_detailed_apps_inner() -> Result<Vec<DetailedApp>, String> {
                 seen_names.insert(display_name.clone());
                 apps.push(DetailedApp {
                     name: display_name,
+                    path: install_location,
                     publisher,
                     version,
                     install_date: "".to_string(),
                     size_kb: 0,
-                    icon_base64,
+                    icon: icon_base64,
                 });
             }
         }

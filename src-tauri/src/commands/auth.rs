@@ -4,11 +4,14 @@ use crate::models::{AppState, AuthMode};
 use crate::services::{security, auth};
 use crate::utils::config::save_config;
 
-/// Checks whether initial setup has been completed (password exists).
+/// Checks whether initial setup has been completed (onboarding done and password exists).
 #[tauri::command]
 pub async fn check_setup(state: State<'_, Arc<AppState>>) -> Result<bool, String> {
     let config = state.config.lock().unwrap();
-    Ok(!config.hashed_password.is_empty())
+    let is_onboarded = config.onboarding_completed.unwrap_or(false);
+    let has_password = !config.hashed_password.is_empty();
+    
+    Ok(is_onboarded && has_password)
 }
 
 /// Creates or updates the master password, recording the change timestamp.
